@@ -1,0 +1,1536 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DoublePeak – Sanger SNP review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bench:#E6EBE8; --panel:#FBFCFB; --sunk:#F1F4F2; --ink:#16201B; --muted:#56635C; --rule:#C7D0CB; --rule-soft:#DCE2DE;
+  --A:#15904A; --C:#1E5DC2; --G:#16201B; --T:#CF332B; --het:#E3A016; --het-bg:#FBE6B0;
+  --ok:#15904A; --warn:#B86E00; --sel:#1E5DC2;
+  --ui:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font:13px/1.45 var(--ui);color:var(--ink);background:var(--bench);display:grid;grid-template-rows:auto 1fr;min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--sel);outline-offset:1px}
+h2{font-size:15px;font-weight:700;margin:0;letter-spacing:.005em}
+.hint{color:var(--muted)}
+
+/* header */
+.top{display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--ink);color:#EEF2EF}
+.brand{display:flex;align-items:center;gap:8px;font-size:19px;font-weight:700;letter-spacing:-.01em;white-space:nowrap}
+.brand svg{display:block}
+#projName{background:transparent;border:1px solid transparent;border-radius:5px;padding:4px 8px;color:#EEF2EF;min-width:0;width:220px}
+#projName:hover,#projName:focus{border-color:#4A5A52;background:#1F2B25}
+#status{flex:1;min-width:0;color:#AFC0B7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.actions{display:flex;gap:8px;align-items:center}
+.btn{border:1px solid var(--rule);background:var(--panel);border-radius:5px;padding:5px 11px;cursor:pointer;white-space:nowrap}
+.btn:hover{background:#fff;border-color:#9FAEA6}
+.btn:disabled{opacity:.45;cursor:default}
+.top .btn{background:#26332C;border-color:#3E4E46;color:#EEF2EF}
+.top .btn:hover{background:#314038}
+.top .btn.primary{background:#EEF2EF;color:var(--ink);border-color:#EEF2EF;font-weight:700}
+.top .btn.primary:hover{background:#fff}
+.menu{position:relative}
+.menu-pop{position:absolute;right:0;top:calc(100% + 6px);background:var(--panel);color:var(--ink);border:1px solid var(--rule);border-radius:6px;box-shadow:0 8px 24px rgba(10,20,15,.18);padding:6px;z-index:20;min-width:270px}
+.menu-pop button{display:block;width:100%;text-align:left;background:none;border:0;padding:7px 10px;border-radius:4px;cursor:pointer}
+.menu-pop button:hover,.menu-pop button:focus-visible{background:var(--sunk)}
+.menu-pop small{display:block;color:var(--muted)}
+
+/* layout */
+main{display:grid;grid-template-columns:330px minmax(0,1fr);grid-template-rows:minmax(240px,44vh) minmax(0,1fr);gap:1px;background:var(--rule);min-height:0}
+.side{grid-row:1 / span 2;background:var(--panel);display:flex;flex-direction:column;min-height:0}
+.aln{background:var(--panel);display:flex;flex-direction:column;min-height:0;position:relative}
+.lower{display:grid;grid-template-columns:320px minmax(0,1fr);gap:1px;background:var(--rule);min-height:0}
+.sites,.inspect{background:var(--panel);display:flex;flex-direction:column;min-height:0}
+.phead{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--rule-soft);min-height:44px}
+.phead h2{flex:1}
+.scroll{overflow:auto;min-height:0;flex:1}
+
+/* settings */
+.settings{padding:12px 14px 14px;border-bottom:1px solid var(--rule);display:grid;gap:12px}
+.field label{display:flex;justify-content:space-between;gap:8px}
+.field output{font-family:var(--mono);font-size:12px}
+.field input[type=range]{width:100%;accent-color:var(--ink);margin:4px 0 0}
+.field p{margin:2px 0 0;font-size:12px;color:var(--muted)}
+
+/* traces */
+.tlist{padding:4px 0}
+.trace{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:4px 8px;padding:9px 14px;border-bottom:1px solid var(--rule-soft)}
+.trace.off .tname,.trace.off .tstats{opacity:.5}
+.trace input[type=checkbox]{margin:2px 0 0;accent-color:var(--ink)}
+.tname{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tsample{width:100%;border:1px solid var(--rule-soft);background:#fff;border-radius:4px;padding:2px 6px;font-size:12px}
+.tstats{font-size:12px;color:var(--muted)}
+.tflag{grid-column:2 / span 2;font-size:12px;color:var(--warn);background:#FFF4DF;border-radius:4px;padding:4px 7px}
+.tside{display:flex;flex-direction:column;gap:5px;align-items:flex-end}
+.tside select{font-size:12px;padding:1px 2px;border:1px solid var(--rule);border-radius:4px;background:#fff}
+.xbtn{border:0;background:none;color:var(--muted);cursor:pointer;font-size:12px;padding:0 2px;text-decoration:underline}
+.xbtn:hover{color:var(--T)}
+details.trim{grid-column:2 / span 2;font-size:12px}
+details.trim summary{cursor:pointer;color:var(--muted)}
+.trimrow{display:flex;gap:6px;align-items:center;margin-top:5px;flex-wrap:wrap}
+.trimrow input{width:66px;border:1px solid var(--rule);border-radius:4px;padding:1px 4px}
+.empty-side{padding:18px 14px;color:var(--muted)}
+
+/* alignment */
+.alnbar{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--rule-soft)}
+#ovw{flex:1;height:30px;min-width:120px;cursor:pointer;display:block}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:5px;overflow:hidden}
+.seg button{border:0;background:var(--panel);padding:3px 9px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--rule)}
+.seg button[aria-pressed=true]{background:var(--ink);color:#fff}
+.tog{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.tog input{accent-color:var(--ink)}
+.alnwrap{position:relative;flex:1;min-height:0}
+.alnscroll{position:absolute;inset:0;overflow:auto}
+.alnspacer{width:1px;height:1px}
+#aln{position:absolute;left:0;top:0;display:block;cursor:crosshair;outline:none}
+#aln:focus-visible{box-shadow:inset 0 0 0 2px var(--sel)}
+.welcome{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--panel)}
+.welcome div{max-width:470px}
+.welcome h2{font-size:19px;margin-bottom:6px}
+.welcome p{margin:0 0 14px;color:var(--muted);font-size:14px;line-height:1.55}
+.welcome .btn{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700;padding:7px 14px}
+.progress{position:absolute;left:0;right:0;top:0;height:3px;background:transparent;z-index:3}
+.progress i{display:block;height:100%;width:0;background:var(--C);transition:width .15s}
+
+/* sites list */
+.phead select{border:1px solid var(--rule);border-radius:4px;background:#fff;padding:2px 4px;font-size:12px}
+.site{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:2px 10px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--rule-soft);background:none;padding:7px 14px;cursor:pointer}
+.site:hover{background:var(--sunk)}
+.site[aria-current=true]{background:#E3EAF7;box-shadow:inset 3px 0 0 var(--sel)}
+.site .pos{font-family:var(--mono);font-weight:700;font-size:12px}
+.site .calls{font-family:var(--mono);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.site .aname{grid-column:2 / span 2;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kind{font-size:11px;padding:0 6px;border-radius:9px;border:1px solid var(--rule);color:var(--muted);align-self:start}
+.kind.het{background:var(--het-bg);border-color:#EDC66A;color:#6B4A00}
+.kind.indel{background:var(--ink);border-color:var(--ink);color:#fff}
+.st-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:0}
+.st-candidate{background:var(--het)} .st-confirmed{background:var(--ok)} .st-artifact{background:#9AA6A0}
+
+/* inspector */
+.ins-empty{padding:22px 16px;color:var(--muted);max-width:520px}
+.ins-empty kbd,.keys kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--rule);border-bottom-width:2px;border-radius:3px;padding:0 4px;background:#fff;color:var(--ink)}
+.ins-top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 14px;padding:12px 16px;border-bottom:1px solid var(--rule-soft)}
+.ins-top h2{font-size:19px}
+.ins-top p{margin:0;color:var(--muted)}
+.ins-nav{display:flex;gap:6px;align-self:start}
+.chips{grid-column:1 / span 2;display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-family:var(--mono);font-size:12px;border-radius:4px;padding:1px 7px;background:var(--sunk);border:1px solid var(--rule-soft)}
+.chip b{font-weight:700}
+.ann{padding:12px 16px;border-bottom:1px solid var(--rule-soft);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 10px;align-items:end}
+.ann label{display:grid;gap:3px;font-size:12px;color:var(--muted)}
+.ann input,.ann select,.ann textarea{border:1px solid var(--rule);border-radius:4px;padding:4px 7px;background:#fff;font-size:13px;color:var(--ink)}
+.ann textarea{resize:vertical;min-height:34px}
+.ann .wide{grid-column:1 / span 3}
+.ann .rm{justify-self:end}
+.ann-none{padding:12px 16px;border-bottom:1px solid var(--rule-soft);display:flex;gap:12px;align-items:center}
+.ann-none p{margin:0;color:var(--muted);flex:1}
+.stack{padding:4px 0 16px}
+.srow{display:grid;grid-template-columns:190px minmax(0,1fr);gap:12px;padding:8px 16px;border-bottom:1px solid var(--rule-soft);align-items:center}
+.smeta{display:grid;gap:3px;min-width:0}
+.smeta .nm{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.smeta .sub{font-size:12px;color:var(--muted)}
+.callrow{display:flex;gap:8px;align-items:center}
+.call{font-family:var(--mono);font-weight:700;font-size:15px;min-width:30px;text-align:center;border-radius:4px;padding:0 4px;border:1px solid var(--rule-soft);background:#fff}
+.call.het{background:var(--het-bg);border-color:#EDC66A}
+.call.ovr{box-shadow:inset 0 -2px 0 var(--sel)}
+.callrow select{font-size:12px;border:1px solid var(--rule);border-radius:4px;padding:1px 2px;background:#fff}
+.srow canvas{width:100%;height:92px;display:block}
+.srow.low .call{opacity:.5}
+.uncov{padding:10px 16px;color:var(--muted);font-size:12px}
+.keys{padding:10px 16px;color:var(--muted);font-size:12px}
+
+/* misc */
+.drop{position:fixed;inset:0;background:rgba(22,32,27,.82);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;z-index:50;pointer-events:none}
+.drop span{border:2px dashed #fff;border-radius:12px;padding:40px 60px}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:60;max-width:min(640px,92vw)}
+.toast.err{background:#8E1F19}
+[hidden]{display:none !important}
+.rangebar{display:flex;gap:12px;align-items:center;padding:5px 12px;background:#E3EAF7;border-bottom:1px solid #C5D3EC;font-size:12px}
+.rangebar span{flex:1}
+dialog#seqDlg{width:min(1100px,94vw);max-height:88vh;padding:0;border:1px solid var(--rule);border-radius:8px;color:var(--ink);background:var(--panel);box-shadow:0 20px 60px rgba(10,20,15,.3)}
+dialog#seqDlg::backdrop{background:rgba(22,32,27,.45)}
+.dlg-head{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--rule-soft)}
+.dlg-head h2{flex:1;font-size:17px}
+.dlg-body{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:0}
+.dlg-opts{padding:12px 16px;border-right:1px solid var(--rule-soft);overflow:auto;max-height:calc(88vh - 60px);display:grid;gap:12px;align-content:start}
+.dlg-opts fieldset{border:0;padding:0;margin:0;display:grid;gap:6px;min-width:0}
+.dlg-opts legend{font-weight:700;margin-bottom:4px;display:flex;gap:8px;align-items:baseline;width:100%}
+.dlg-opts input[type=number]{width:70px;border:1px solid var(--rule);border-radius:4px;padding:1px 4px}
+.dlg-opts select{border:1px solid var(--rule);border-radius:4px;padding:3px;background:#fff;width:100%;min-width:0}
+.dlg-opts p{margin:0;font-size:12px}
+.dlg-opts input[type=radio],.dlg-opts input[type=checkbox]{accent-color:var(--ink)}
+#sqRows{display:grid;gap:3px;max-height:260px;overflow:auto;font-size:12px}
+#sqRows label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dlg-out{display:flex;flex-direction:column;padding:12px 16px;gap:10px;min-width:0}
+#sqText{flex:1;min-height:340px;width:100%;resize:none;font:500 12px/1.5 var(--mono);border:1px solid var(--rule);border-radius:5px;padding:8px 10px;background:#fff;white-space:pre;overflow:auto}
+.dlg-foot{display:flex;gap:8px;align-items:center}
+.dlg-foot span{flex:1;font-size:12px}
+.btn.dark{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
+.btn.dark:hover{background:#26332C}
+@media (max-width:760px){.dlg-body{grid-template-columns:1fr}.dlg-opts{border-right:0;border-bottom:1px solid var(--rule-soft);max-height:none}}
+
+@media (max-width: 1000px){
+  body{display:block}
+  main{display:block}
+  .side,.aln,.sites,.inspect{border-bottom:1px solid var(--rule)}
+  .aln{height:420px}
+  .lower{display:block}
+  .sites .scroll{max-height:300px}
+  .top{flex-wrap:wrap}
+  #status{order:5;flex-basis:100%}
+}
+@media (max-width: 640px){
+  .srow{grid-template-columns:1fr}
+  .ann{grid-template-columns:1fr 1fr}
+  .ann .wide{grid-column:1 / span 2}
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <svg width="30" height="22" viewBox="0 0 30 22" aria-hidden="true"><path d="M1 21 C6 21 7 3 10.5 3 S15 21 20 21" fill="none" stroke="#3FC07A" stroke-width="2.2"/><path d="M8 21 C12 21 13.5 9 16.5 9 S21 21 29 21" fill="none" stroke="#FF6A60" stroke-width="2.2"/></svg>
+    <span>DoublePeak</span>
+  </div>
+  <input id="projName" value="Untitled project" aria-label="Project name" spellcheck="false">
+  <span id="status" role="status" aria-live="polite"></span>
+  <div class="actions">
+    <button class="btn primary" id="btnAdd">Add traces</button>
+    <input type="file" id="fileAb1" multiple accept=".ab1,.abi,.ab!" hidden>
+    <button class="btn" id="btnOpen">Open project</button>
+    <input type="file" id="fileProj" accept=".gz,.json,.dpk" hidden>
+    <button class="btn" id="btnSave" disabled>Save project</button>
+    <div class="menu">
+      <button class="btn" id="btnExport" aria-haspopup="true" aria-expanded="false" disabled>Export</button>
+      <div class="menu-pop" id="exportMenu" hidden role="menu">
+        <button role="menuitem" data-x="annotated">Annotated sites (CSV)<small>One row per annotated site, genotypes by sample</small></button>
+        <button role="menuitem" data-x="variable">All variable sites (CSV)<small>Every site where confident calls differ</small></button>
+        <button role="menuitem" data-x="long">Calls by trace (CSV)<small>Long format with peak ratio and quality</small></button>
+        <button role="menuitem" data-x="seqtext">Copy sequences<small>Pick traces and a range, then copy or save as text</small></button>
+        <button role="menuitem" data-x="fasta">Alignment (FASTA)<small>Aligned traces plus consensus, IUPAC codes</small></button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <aside class="side">
+    <section class="settings" aria-label="Calling settings">
+      <div class="field">
+        <label for="setRatio"><span>Double-peak threshold</span><output id="outRatio">0.33</output></label>
+        <input type="range" id="setRatio" min="0.10" max="0.60" step="0.01" value="0.33">
+        <p>Second peak height as a fraction of the first. At or above this, the base is called heterozygous.</p>
+      </div>
+      <div class="field">
+        <label for="setTrim"><span>End trimming</span><output id="outTrim">0.05</output></label>
+        <input type="range" id="setTrim" min="0.005" max="0.20" step="0.005" value="0.05">
+        <p>Error-probability limit for trimming noisy read ends. Lower trims harder.</p>
+      </div>
+      <div class="field">
+        <label for="setQ"><span>Minimum quality, single-peak calls</span><output id="outQ">20</output></label>
+        <input type="range" id="setQ" min="0" max="40" step="1" value="20">
+        <p>Single-peak calls below this Phred score don't create variant sites. Double peaks always count, since their quality scores run low.</p>
+      </div>
+    </section>
+    <div class="phead"><h2 id="traceHead">Traces</h2></div>
+    <div class="scroll"><div class="tlist" id="tlist"><p class="empty-side">No traces yet.</p></div></div>
+  </aside>
+
+  <section class="aln" aria-label="Alignment">
+    <div class="progress"><i id="prog"></i></div>
+    <div class="alnbar">
+      <canvas id="ovw" aria-label="Alignment overview. Click to jump." role="img"></canvas>
+      <span class="seg" role="group" aria-label="Zoom">
+        <button id="zoomOut" aria-label="Zoom out">−</button>
+        <button id="zoomIn" aria-label="Zoom in">+</button>
+      </span>
+      <label class="tog"><input type="checkbox" id="dots"> Dots for matches</label>
+      <button class="btn" id="btnSeq" disabled>Copy sequences</button>
+    </div>
+    <div class="rangebar" id="rangeInfo" hidden><span></span><button class="xbtn" id="rangeClear">Clear selection</button></div>
+    <div class="alnwrap">
+      <div class="alnscroll" id="alnScroll"><div class="alnspacer" id="alnSpacer"></div></div>
+      <canvas id="aln" tabindex="0" aria-label="Alignment grid. Use arrow keys to move between columns, brackets to jump between variant sites."></canvas>
+      <div class="welcome" id="welcome">
+        <div>
+          <h2>Add Sanger traces to start</h2>
+          <p>Drop .ab1 files anywhere on the page. Reads from the same amplicon are aligned to each other, reverse reads are flipped automatically, and double peaks are called as heterozygous sites.</p>
+          <button class="btn" id="btnAdd2">Add traces</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="lower">
+    <section class="sites" aria-label="Variant sites">
+      <div class="phead">
+        <h2 id="siteHead">Variant sites</h2>
+        <select id="siteFilter" aria-label="Filter sites">
+          <option value="all">All variable</option>
+          <option value="het">With double peaks</option>
+          <option value="indel">Gaps</option>
+          <option value="ann">Annotated</option>
+        </select>
+      </div>
+      <div class="scroll" id="siteList"></div>
+    </section>
+
+    <section class="inspect" aria-label="Site inspector">
+      <div class="scroll" id="inspector">
+        <div class="ins-empty">
+          <p>Select a column in the alignment or a site from the list to see every trace's chromatogram at that position, annotate the variant, and correct calls.</p>
+          <p class="keys"><kbd>←</kbd> <kbd>→</kbd> move one column, <kbd>[</kbd> <kbd>]</kbd> previous or next variant site.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div class="drop" id="drop" hidden><span>Drop .ab1 files to add them</span></div>
+<div class="toast" id="toast" hidden role="alert"></div>
+
+<dialog id="seqDlg" aria-labelledby="sqTitle">
+  <div class="dlg-head"><h2 id="sqTitle">Copy sequences</h2><button class="xbtn" id="sqClose">Close</button></div>
+  <div class="dlg-body">
+    <div class="dlg-opts">
+      <fieldset>
+        <legend>Range</legend>
+        <label><input type="radio" name="sqRange" value="all" checked> Whole alignment</label>
+        <label><input type="radio" name="sqRange" value="sel"> Positions
+          <input type="number" id="sqFrom" min="1" aria-label="From position"> to <input type="number" id="sqTo" min="1" aria-label="To position"></label>
+        <p class="hint">Shift-click in the alignment to select a range before opening this.</p>
+      </fieldset>
+      <fieldset>
+        <legend>Format</legend>
+        <select id="sqFmt" aria-label="Format">
+          <option value="fasta">FASTA</option>
+          <option value="aligned">Aligned text (name and sequence per line)</option>
+          <option value="plain">Sequence only</option>
+        </select>
+        <label><input type="checkbox" id="sqGaps" checked> Keep alignment gaps</label>
+        <p class="hint">Turn gaps off for sequence to paste into BLAST or primer design. Double peaks stay as IUPAC codes.</p>
+      </fieldset>
+      <fieldset class="rows">
+        <legend>Sequences <button class="xbtn" id="sqAll" type="button">All</button> <button class="xbtn" id="sqNone" type="button">None</button></legend>
+        <div id="sqRows"></div>
+      </fieldset>
+    </div>
+    <div class="dlg-out">
+      <textarea id="sqText" readonly spellcheck="false" aria-label="Sequence text"></textarea>
+      <div class="dlg-foot"><span id="sqInfo" class="hint"></span><button class="btn" id="sqSave">Save as file</button><button class="btn dark" id="sqCopy">Copy to clipboard</button></div>
+    </div>
+  </div>
+</dialog>
+
+<script>
+/* ===== DoublePeak core: parsing, calling, trimming, alignment ===== */
+const DP = (() => {
+  const MASK = { A:1, C:2, G:4, T:8, M:3, R:5, W:9, S:6, Y:10, K:12, V:7, H:11, D:13, B:14, N:15 };
+  const CODE = []; for (const k in MASK) CODE[MASK[k]] = k;
+  const COMP = { A:'T', C:'G', G:'C', T:'A', M:'K', K:'M', R:'Y', Y:'R', W:'W', S:'S', V:'B', B:'V', H:'D', D:'H', N:'N', '-':'-' };
+  const HET = new Set(['M','R','W','S','Y','K']);
+  const ALLELES = { A:'A/A', C:'C/C', G:'G/G', T:'T/T', M:'A/C', R:'A/G', W:'A/T', S:'C/G', Y:'C/T', K:'G/T', N:'N/N', '-':'-/-' };
+  const BASES = ['A','C','G','T'];
+
+  function popcount(x){ let c=0; while(x){ c+=x&1; x>>=1; } return c; }
+
+  /* ---------- ABIF (.ab1) parser ---------- */
+  function parseAB1(buffer) {
+    const dv = new DataView(buffer);
+    if (buffer.byteLength < 34) throw new Error('File is too small to be an .ab1 trace.');
+    const magic = String.fromCharCode(dv.getUint8(0), dv.getUint8(1), dv.getUint8(2), dv.getUint8(3));
+    if (magic !== 'ABIF') throw new Error('Not an ABIF trace file (expected an .ab1 from a capillary sequencer).');
+    const nEntries = dv.getInt32(18);
+    const dirOffset = dv.getInt32(26);
+    const dir = {};
+    for (let k = 0; k < nEntries; k++) {
+      const o = dirOffset + k * 28;
+      if (o + 28 > buffer.byteLength) break;
+      const name = String.fromCharCode(dv.getUint8(o), dv.getUint8(o+1), dv.getUint8(o+2), dv.getUint8(o+3));
+      const num = dv.getInt32(o + 4);
+      const etype = dv.getInt16(o + 8);
+      const nel = dv.getInt32(o + 12);
+      const dsize = dv.getInt32(o + 16);
+      const doff = dsize <= 4 ? o + 20 : dv.getInt32(o + 20);
+      dir[name + num] = { etype, nel, dsize, doff };
+    }
+    const bytes = (e) => new Uint8Array(buffer, e.doff, Math.min(e.dsize, buffer.byteLength - e.doff));
+    const str = (e) => { let s=''; const b=bytes(e); for (let i=0;i<b.length;i++) s+=String.fromCharCode(b[i]); return s; };
+    const shorts = (e) => { const a = new Int16Array(e.nel); for (let i=0;i<e.nel;i++) a[i]=dv.getInt16(e.doff+2*i); return a; };
+    const pick = (...keys) => { for (const k of keys) if (dir[k]) return dir[k]; return null; };
+
+    const baseE = pick('PBAS2','PBAS1');
+    const locE = pick('PLOC2','PLOC1');
+    if (!baseE || !locE) throw new Error('Trace has no base calls (PBAS/PLOC tags missing).');
+    const bases = str(baseE).toUpperCase().replace(/[^ACGTNMRWSYKVHDB]/g,'N');
+    const ploc = shorts(locE);
+    const qualE = pick('PCON2','PCON1');
+    let qual = null;
+    if (qualE) { const b = bytes(qualE); qual = new Uint8Array(b.length); qual.set(b); }
+    const fwoE = pick('FWO_1');
+    const order = fwoE ? str(fwoE).slice(0,4).toUpperCase() : 'GATC';
+    const data = {};
+    let first = 9;
+    if (!dir['DATA9']) first = 1;
+    for (let c = 0; c < 4; c++) {
+      const e = dir['DATA' + (first + c)];
+      if (!e) throw new Error('Trace is missing chromatogram channel data.');
+      data[order[c]] = shorts(e);
+    }
+    const smplE = pick('SMPL1');
+    let sample = '';
+    if (smplE) { const s = str(smplE); sample = (smplE.etype === 18 ? s.slice(1, 1 + s.charCodeAt(0)) : s).replace(/\0/g,'').trim(); }
+    const n = Math.min(bases.length, ploc.length);
+    const traceLen = data.A.length;
+    return { bases: bases.slice(0, n), ploc: ploc.slice(0, n), qual: qual ? qual.slice(0, n) : null, data, traceLen, sample };
+  }
+
+  /* ---------- secondary-peak calling ---------- */
+  function callPeaks(raw, ratioCut) {
+    const n = raw.bases.length, out = new Array(n);
+    const { data, traceLen, ploc, qual } = raw;
+    for (let i = 0; i < n; i++) {
+      const loc = ploc[i];
+      const amp = [0,0,0,0];
+      for (let c = 0; c < 4; c++) {
+        const ch = data[BASES[c]]; let m = 0;
+        for (let d = -1; d <= 1; d++) { const p = loc + d; if (p >= 0 && p < traceLen && ch[p] > m) m = ch[p]; }
+        amp[c] = m;
+      }
+      let p1 = 0; for (let c = 1; c < 4; c++) if (amp[c] > amp[p1]) p1 = c;
+      let p2 = p1 === 0 ? 1 : 0; for (let c = 0; c < 4; c++) if (c !== p1 && amp[c] > amp[p2]) p2 = c;
+      const ratio = amp[p1] > 0 ? amp[p2] / amp[p1] : 0;
+      let code;
+      if (amp[p1] <= 0) code = 'N';
+      else if (ratio >= ratioCut) code = CODE[MASK[BASES[p1]] | MASK[BASES[p2]]];
+      else code = BASES[p1];
+      out[i] = { code, ratio, q: qual ? qual[i] : -1 };
+    }
+    return out;
+  }
+
+  /* ---------- Mott quality trimming ---------- */
+  function mottTrim(qual, n, cutoff) {
+    if (!qual) return { s: 0, e: n };
+    let best = 0, bs = 0, be = 0, sum = 0, s = 0;
+    for (let i = 0; i < n; i++) {
+      sum += cutoff - Math.pow(10, -qual[i] / 10);
+      if (sum < 0) { sum = 0; s = i + 1; }
+      else if (sum > best) { best = sum; bs = s; be = i + 1; }
+    }
+    return { s: bs, e: be };
+  }
+
+  /* ---------- oriented sequence for alignment ---------- */
+  function orientedSeq(calls, trim, reverse) {
+    const idx = [], codes = [];
+    if (!reverse) for (let i = trim.s; i < trim.e; i++) { idx.push(i); codes.push(calls[i].code); }
+    else for (let i = trim.e - 1; i >= trim.s; i--) { idx.push(i); codes.push(COMP[calls[i].code]); }
+    const masks = new Uint8Array(codes.length);
+    for (let k = 0; k < codes.length; k++) masks[k] = MASK[codes[k]] || 15;
+    return { idx: Int32Array.from(idx), masks, codes };
+  }
+
+  /* ---------- scoring ---------- */
+  const SC = new Int8Array(256);
+  for (let a = 0; a < 16; a++) for (let b = 0; b < 16; b++) {
+    let s;
+    if (a === 0 || b === 0 || a === 15 || b === 15) s = 0;
+    else if (popcount(a) === 1 && popcount(b) === 1) s = a === b ? 2 : -3;
+    else s = (a & b) ? 1 : -2;
+    SC[a * 16 + b] = s;
+  }
+  const GO = -5, GE = -2;
+
+  /* Semi-global (overlap) alignment with affine gaps; end gaps free on both sequences.
+     Returns score and the path as parallel arrays (ai, bi), -1 marks a gap. */
+  function align(A, B) {
+    const n = A.length, m = B.length, W = m + 1, NEG = -1e9;
+    let Hp = new Float64Array(W), Hc = new Float64Array(W), Fp = new Float64Array(W), Fc = new Float64Array(W);
+    const tb = new Uint8Array((n + 1) * W);
+    for (let j = 0; j <= m; j++) { Hp[j] = 0; Fp[j] = NEG; }
+    let bestCol = NEG, bestColI = 0;
+    for (let i = 1; i <= n; i++) {
+      Hc[0] = 0; Fc[0] = NEG; let E = NEG;
+      const ai = A[i - 1] * 16, row = i * W;
+      for (let j = 1; j <= m; j++) {
+        const eo = Hc[j - 1] + GO, ee = E + GE, eFromE = ee > eo; E = eFromE ? ee : eo;
+        const fo = Hp[j] + GO, fe = Fp[j] + GE, fFromF = fe > fo; const F = fFromF ? fe : fo; Fc[j] = F;
+        let h = Hp[j - 1] + SC[ai + B[j - 1]], src = 0;
+        if (E > h) { h = E; src = 1; }
+        if (F > h) { h = F; src = 2; }
+        Hc[j] = h;
+        tb[row + j] = src | (eFromE ? 4 : 0) | (fFromF ? 8 : 0);
+      }
+      if (Hc[m] > bestCol) { bestCol = Hc[m]; bestColI = i; }
+      let t = Hp; Hp = Hc; Hc = t; t = Fp; Fp = Fc; Fc = t;
+    }
+    let bestRow = NEG, bestRowJ = 0;
+    for (let j = 0; j <= m; j++) if (Hp[j] > bestRow) { bestRow = Hp[j]; bestRowJ = j; }
+    if (n === 0 || m === 0) { bestRow = 0; bestRowJ = m; }
+    const ai = [], bi = [];
+    let i, j, score;
+    if (bestRow >= bestCol) { i = n; j = bestRowJ; score = bestRow; for (let k = m - 1; k >= j; k--) { ai.push(-1); bi.push(k); } }
+    else { i = bestColI; j = m; score = bestCol; for (let k = n - 1; k >= i; k--) { ai.push(k); bi.push(-1); } }
+    let state = 0;
+    while (i > 0 && j > 0) {
+      const t = tb[i * W + j];
+      if (state === 0) {
+        const src = t & 3;
+        if (src === 0) { ai.push(i - 1); bi.push(j - 1); i--; j--; }
+        else state = src;
+      } else if (state === 1) { ai.push(-1); bi.push(j - 1); state = (t & 4) ? 1 : 0; j--; }
+      else { ai.push(i - 1); bi.push(-1); state = (t & 8) ? 2 : 0; i--; }
+    }
+    while (i > 0) { ai.push(i - 1); bi.push(-1); i--; }
+    while (j > 0) { ai.push(-1); bi.push(j - 1); j--; }
+    ai.reverse(); bi.reverse();
+    return { score, ai, bi };
+  }
+
+  /* Center-star merge of pairwise alignments onto one anchor.
+     paths[r] = {ai, bi} aligning anchor (length n) to read r.
+     Returns column count and per-read Int32Array rows: read index, -1 gap, -2 uncovered. */
+  function starMerge(n, paths, readLens) {
+    const R = paths.length;
+    const aligned = [], ins = [];
+    const maxIns = new Int32Array(n + 1);
+    for (let r = 0; r < R; r++) {
+      const al = new Int32Array(n).fill(-1);
+      const insR = Array.from({ length: n + 1 }, () => []);
+      const { ai, bi } = paths[r];
+      let slot = 0;
+      for (let k = 0; k < ai.length; k++) {
+        if (ai[k] >= 0) { al[ai[k]] = bi[k]; slot = ai[k] + 1; }
+        else insR[slot].push(bi[k]);
+      }
+      for (let p = 0; p <= n; p++) if (insR[p].length > maxIns[p]) maxIns[p] = insR[p].length;
+      aligned.push(al); ins.push(insR);
+    }
+    let cols = n; for (let p = 0; p <= n; p++) cols += maxIns[p];
+    const anchorCol = new Int32Array(n);
+    const rows = [];
+    for (let r = 0; r < R; r++) rows.push(new Int32Array(cols).fill(-1));
+    let c = 0;
+    for (let p = 0; p <= n; p++) {
+      const w = maxIns[p];
+      for (let r = 0; r < R; r++) {
+        const L = ins[r][p];
+        const off = p === 0 ? w - L.length : 0;
+        for (let k = 0; k < L.length; k++) rows[r][c + off + k] = L[k];
+      }
+      c += w;
+      if (p < n) { anchorCol[p] = c; for (let r = 0; r < R; r++) rows[r][c] = aligned[r][p]; c++; }
+    }
+    for (let r = 0; r < R; r++) {
+      const row = rows[r];
+      let f = 0; while (f < cols && row[f] < 0) f++;
+      let l = cols - 1; while (l >= 0 && row[l] < 0) l--;
+      for (let k = 0; k < f; k++) row[k] = -2;
+      for (let k = l + 1; k < cols; k++) row[k] = -2;
+    }
+    return { cols, rows, anchorCol };
+  }
+
+  /* majority consensus (masks) from an MSA of mask sequences */
+  function consensusMasks(cols, rows, seqs) {
+    const out = [];
+    for (let c = 0; c < cols; c++) {
+      const cnt = new Map(); let gaps = 0, cov = 0;
+      for (let r = 0; r < rows.length; r++) {
+        const v = rows[r][c];
+        if (v === -2) continue;
+        cov++;
+        if (v === -1) { gaps++; continue; }
+        const mk = seqs[r][v]; if (mk === 15) continue;
+        cnt.set(mk, (cnt.get(mk) || 0) + 1);
+      }
+      if (!cov) continue;
+      let best = 15, bc = 0;
+      for (const [k, v] of cnt) if (v > bc || (v === bc && popcount(k) < popcount(best))) { best = k; bc = v; }
+      if (gaps > bc) continue;
+      out.push(best);
+    }
+    return Uint8Array.from(out);
+  }
+
+  /* Full reference-free alignment. items: [{masks, masksRC, force:'F'|'R'|null}] */
+  async function alignAll(items, onProgress) {
+    const R = items.length;
+    if (!R) return { cols: 0, rows: [], orient: [], scores: [] };
+    let anchor = 0;
+    for (let r = 1; r < R; r++) if (items[r].masks.length > items[anchor].masks.length) anchor = r;
+    const orient = new Array(R);
+    orient[anchor] = items[anchor].force === 'R' ? 'R' : 'F';
+    const A0 = orient[anchor] === 'R' ? items[anchor].masksRC : items[anchor].masks;
+    const paths1 = [], seqs1 = [];
+    const total = R * 2;
+    let done = 0;
+    for (let r = 0; r < R; r++) {
+      let path, seq;
+      if (r === anchor) { const ai = [], bi = []; for (let k = 0; k < A0.length; k++) { ai.push(k); bi.push(k); } path = { ai, bi }; seq = A0; }
+      else {
+        const it = items[r];
+        let f = null, rv = null;
+        if (it.force !== 'R') f = align(A0, it.masks);
+        if (it.force !== 'F') rv = align(A0, it.masksRC);
+        if (f && (!rv || f.score >= rv.score)) { path = f; seq = it.masks; orient[r] = 'F'; }
+        else { path = rv; seq = it.masksRC; orient[r] = 'R'; }
+      }
+      paths1.push(path); seqs1.push(seq);
+      done++; if (onProgress) await onProgress(done / total);
+    }
+    const m1 = starMerge(A0.length, paths1);
+    const cons = consensusMasks(m1.cols, m1.rows, seqs1);
+    const paths2 = [], scores = [];
+    for (let r = 0; r < R; r++) {
+      const res = align(cons, seqs1[r]);
+      paths2.push(res); scores.push(res.score);
+      done++; if (onProgress) await onProgress(done / total);
+    }
+    const m2 = starMerge(cons.length, paths2);
+    return { cols: m2.cols, rows: m2.rows, orient, scores };
+  }
+
+  function revComp(code) { return COMP[code] || 'N'; }
+
+  return { MASK, CODE, COMP, HET, ALLELES, BASES, parseAB1, callPeaks, mottTrim, orientedSeq, align, starMerge, consensusMasks, alignAll, revComp, popcount };
+})();
+if (typeof module !== 'undefined') module.exports = DP;
+
+</script>
+<script>
+(() => {
+'use strict';
+const $ = (id) => document.getElementById(id);
+const COL = { A:'#15904A', C:'#1E5DC2', G:'#16201B', T:'#CF332B', het:'#E3A016', hetBg:'#FBE6B0', muted:'#8C9993', ink:'#16201B', rule:'#DCE2DE', sel:'#1E5DC2', match:'#CBD3CF', panel:'#FBFCFB', sunk:'#F1F4F2' };
+const MONO = '"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace';
+const UIF = '"Atkinson Hyperlegible", system-ui, sans-serif';
+const ZOOMS = [3, 5, 8, 12, 16];
+const MIN_LEN = 50;
+
+const S = {
+  traces: [], settings: { ratio: 0.33, trim: 0.05, minQ: 20 },
+  view: { zoom: 3, dots: false, filter: 'all' },
+  aln: null, info: null, sel: -1,
+  ann: [], ovr: {}, dirty: false, run: 0, nextId: 1,
+};
+
+/* ---------------- utilities ---------------- */
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const uid = () => 't' + (S.nextId++) + '_' + Math.random().toString(36).slice(2, 7);
+const baseName = (f) => f.replace(/\.(ab1|abi|ab!)$/i, '');
+const sleep0 = () => new Promise((r) => setTimeout(r, 0));
+let toastTimer;
+function toast(msg, err) {
+  const t = $('toast'); t.textContent = msg; t.className = 'toast' + (err ? ' err' : ''); t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, err ? 8000 : 4000);
+}
+function setStatus(s) { $('status').textContent = s; }
+function setProgress(f) { $('prog').style.width = f == null ? '0' : Math.round(f * 100) + '%'; }
+function markDirty() { S.dirty = true; }
+function isHet(c) { return DP.HET.has(c); }
+
+function toB64(u8) { let s = ''; const CH = 0x8000; for (let i = 0; i < u8.length; i += CH) s += String.fromCharCode.apply(null, u8.subarray(i, i + CH)); return btoa(s); }
+function fromB64(b) { const s = atob(b); const u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; }
+
+/* ---------------- per-trace processing ---------------- */
+function processTrace(t) {
+  const raw = t.raw, n = raw.bases.length;
+  t.calls = DP.callPeaks(raw, S.settings.ratio);
+  const auto = DP.mottTrim(raw.qual, n, S.settings.trim);
+  t.autoTrim = auto;
+  t.trim = t.manualTrim ? { s: Math.max(0, Math.min(n, t.manualTrim.s)), e: Math.max(0, Math.min(n, t.manualTrim.e)) } : auto;
+  if (t.trim.e < t.trim.s) t.trim.e = t.trim.s;
+  t.seqF = DP.orientedSeq(t.calls, t.trim, false);
+  t.seqR = DP.orientedSeq(t.calls, t.trim, true);
+  t.flags = [];
+  const len = t.trim.e - t.trim.s;
+  if (len < MIN_LEN) t.flags.push('Too little high-quality sequence to align (' + len + ' bases after trimming). Try a looser end-trimming setting, or set the trim range by hand.');
+  // sustained double peaks (40%+ of bases over 60 bp) after the read start: heterozygous indel or mixed template
+  const P = new Int32Array(n + 1);
+  for (let i = 0; i < n; i++) P[i + 1] = P[i] + (isHet(t.calls[i].code) ? 1 : 0);
+  for (let p = t.trim.s; p + 60 <= n; p++) {
+    if (P[p + 60] - P[p] >= 24) {
+      let q = p; while (q < p + 60 && !isHet(t.calls[q].code)) q++;
+      t.flags.push('Double peaks become dense from about base ' + (q + 1) + ' of ' + n + '. This usually means a heterozygous indel near that point, or a mixed template, so calls past it are unreliable.');
+      break;
+    }
+  }
+}
+
+function effCode(t, raw) {
+  const o = S.ovr[t.id]; const c = (o && o[raw] != null) ? o[raw] : t.calls[raw].code;
+  return t.orientUsed === 'R' ? DP.COMP[c] : c;
+}
+function isOvr(t, raw) { const o = S.ovr[t.id]; return !!(o && o[raw] != null); }
+function isConf(t, raw) {
+  if (isOvr(t, raw)) return true;
+  const c = t.calls[raw]; if (c.code === 'N') return false;
+  if (isHet(c.code) || c.q < 0) return true;
+  return c.q >= S.settings.minQ;
+}
+
+/* ---------------- pipeline ---------------- */
+let schedTimer = null, pendingLevel = 0;
+const LV = { analyze: 1, align: 2, calls: 3 };
+function schedule(level, delay = 200) {
+  pendingLevel = Math.max(pendingLevel, LV[level]);
+  clearTimeout(schedTimer);
+  schedTimer = setTimeout(() => { const l = pendingLevel; pendingLevel = 0; runPipeline(l); }, delay);
+}
+
+async function runPipeline(level) {
+  const token = ++S.run;
+  if (level >= LV.calls) S.traces.forEach(processTrace);
+  if (level >= LV.align) {
+    const use = S.traces.filter((t) => t.include && (t.trim.e - t.trim.s) >= MIN_LEN);
+    S.traces.forEach((t) => { t.rowAt = null; t.rawToCol = null; t.identity = null; if (!use.includes(t)) t.orientUsed = null; });
+    if (!use.length) { S.aln = null; S.info = null; S.sel = -1; renderAll(); setStatus(S.traces.length ? 'No traces are ready to align.' : ''); return; }
+    setStatus('Aligning ' + use.length + ' trace' + (use.length > 1 ? 's' : '') + '…');
+    const items = use.map((t) => ({ masks: t.seqF.masks, masksRC: t.seqR.masks, force: t.orient === 'F' ? 'F' : t.orient === 'R' ? 'R' : null }));
+    let lastYield = performance.now();
+    const res = await DP.alignAll(items, async (f) => {
+      setProgress(f);
+      if (performance.now() - lastYield > 40) { await sleep0(); lastYield = performance.now(); }
+      if (token !== S.run) throw new Error('stale');
+    }).catch((e) => { if (e.message === 'stale') return null; throw e; });
+    if (!res || token !== S.run) return;
+    setProgress(null);
+    const cols = res.cols;
+    use.forEach((t, r) => {
+      t.orientUsed = res.orient[r];
+      const seq = t.orientUsed === 'R' ? t.seqR : t.seqF;
+      const row = res.rows[r], rowAt = new Int32Array(cols), r2c = new Int32Array(t.raw.bases.length).fill(-1);
+      for (let c = 0; c < cols; c++) { const v = row[c]; if (v >= 0) { const ri = seq.idx[v]; rowAt[c] = ri; r2c[ri] = c; } else rowAt[c] = v; }
+      t.rowAt = rowAt; t.rawToCol = r2c;
+    });
+    const prevSelLoc = S.selLoc;
+    S.aln = { cols, traces: use };
+    if (prevSelLoc) { const c = resolveLoc(prevSelLoc); S.sel = c; } else S.sel = Math.min(S.sel, cols - 1);
+    if (S.range) { const a = resolveLoc(S.range.locA), b = resolveLoc(S.range.locB); S.range = (a >= 0 && b >= 0) ? { a, b, locA: S.range.locA, locB: S.range.locB } : null; }
+    updateSpacer();
+  }
+  analyze();
+  renderAll();
+}
+
+/* ---------------- analysis ---------------- */
+function analyze() {
+  const A = S.aln; if (!A) { S.info = null; return; }
+  const cols = A.cols, T = A.traces;
+  const cons = new Array(cols), counts = new Array(cols), variable = new Uint8Array(cols), kind = new Array(cols), cov = new Int32Array(cols);
+  for (let c = 0; c < cols; c++) {
+    const all = new Map(), conf = new Set(); let gaps = 0, n = 0, nonGap = 0;
+    for (const t of T) {
+      const v = t.rowAt[c]; if (v === -2) continue; n++;
+      if (v === -1) { gaps++; conf.add('-'); all.set('-', (all.get('-') || 0) + 1); continue; }
+      const code = effCode(t, v); all.set(code, (all.get(code) || 0) + 1);
+      if (code !== 'N') nonGap++;
+      if (code !== 'N' && isConf(t, v)) conf.add(code);
+    }
+    cov[c] = n; counts[c] = all;
+    let best = 'N', bc = -1;
+    for (const [k, v] of all) { if (k === '-' || k === 'N') continue; if (v > bc || (v === bc && !isHet(k) && isHet(best))) { best = k; bc = v; } }
+    cons[c] = n === 0 ? ' ' : (gaps > Math.max(bc, 0) || bc < 0) ? (gaps ? '-' : 'N') : best;
+    if (conf.size > 1 || [...conf].some(isHet)) {
+      variable[c] = 1;
+      kind[c] = conf.has('-') ? 'indel' : [...conf].some(isHet) ? 'het' : 'snp';
+    }
+  }
+  const pos = new Array(cols); let p = 0, ins = 0;
+  for (let c = 0; c < cols; c++) { if (cons[c] !== '-' && cons[c] !== ' ') { p++; ins = 0; pos[c] = String(p); } else { ins++; pos[c] = p + '+' + ins; } }
+  const annAt = new Map();
+  S.ann.forEach((a) => { a.col = resolveLoc(a.loc); if (a.col >= 0 && !annAt.has(a.col)) annAt.set(a.col, a); });
+  const sites = []; for (let c = 0; c < cols; c++) if (variable[c] || annAt.has(c)) sites.push(c);
+  // overlap with other traces, and identity to the closest other trace
+  const codesOf = T.map((t) => { const out = new Array(cols); for (let c = 0; c < cols; c++) { const v = t.rowAt[c]; out[c] = v === -2 ? null : v === -1 ? '-' : effCode(t, v); } return out; });
+  T.forEach((t, i) => {
+    let covd = 0, ovl = 0;
+    for (let c = 0; c < cols; c++) if (codesOf[i][c] !== null) { covd++; if (cov[c] > 1) ovl++; }
+    t.overlap = covd ? ovl / covd : 0;
+    let best = null;
+    T.forEach((u, j) => {
+      if (i === j) return; let m = 0, tot = 0;
+      const A = codesOf[i], B = codesOf[j];
+      for (let c = 0; c < cols; c++) {
+        const x = A[c], y = B[c]; if (x === null || y === null || x === 'N' || y === 'N') continue;
+        if (x === '-' && y === '-') continue;
+        tot++; if (x !== '-' && y !== '-' && (DP.MASK[x] & DP.MASK[y])) m++;
+      }
+      if (tot >= 50) { const idn = m / tot; if (best === null || idn > best) best = idn; }
+    });
+    t.identity = best;
+  });
+  S.info = { cons, counts, variable, kind, cov, pos, sites, annAt };
+}
+
+/* locators tie annotations and selection to trace bases, so they survive re-alignment */
+function makeLoc(c) {
+  const out = [];
+  if (!S.aln) return out;
+  const T = [...S.aln.traces].sort((a, b) => (b.trim.e - b.trim.s) - (a.trim.e - a.trim.s));
+  for (const t of T) { const v = t.rowAt[c]; if (v >= 0) out.push({ t: t.id, i: v }); if (out.length >= 8) break; }
+  if (!out.length) { // gap-only column: anchor to left neighbour + offset
+    for (const t of T) { for (let k = c - 1; k >= 0; k--) { const v = t.rowAt[k]; if (v === -2) break; if (v >= 0) { out.push({ t: t.id, i: v, off: c - k }); break; } } if (out.length >= 4) break; }
+  }
+  return out;
+}
+function resolveLoc(loc) {
+  if (!S.aln || !loc) return -1;
+  for (const L of loc) {
+    const t = S.aln.traces.find((x) => x.id === L.t); if (!t || !t.rawToCol) continue;
+    const c = t.rawToCol[L.i]; if (c < 0) continue;
+    const cc = c + (L.off || 0); if (cc < S.aln.cols) return cc;
+  }
+  return -1;
+}
+
+/* ---------------- trace loading ---------------- */
+async function addFiles(files) {
+  const list = [...files]; let ok = 0; const bad = [];
+  for (const f of list) {
+    try {
+      const buf = await f.arrayBuffer();
+      const raw = DP.parseAB1(buf);
+      if (raw.qual && !raw.qual.some((q) => q > 0)) raw.qual = null;
+      S.traces.push({ id: uid(), fileName: f.name, name: baseName(f.name), sample: baseName(f.name), include: true, orient: 'auto', manualTrim: null, bytes: new Uint8Array(buf), raw });
+      ok++;
+    } catch (e) { bad.push(f.name + ': ' + e.message); }
+  }
+  if (bad.length) toast('Skipped ' + bad.length + ' file' + (bad.length > 1 ? 's' : '') + '. ' + bad[0], true);
+  if (ok) { markDirty(); schedule('calls', 0); }
+}
+
+/* ---------------- rendering: sidebar ---------------- */
+function renderTraces() {
+  const el = $('tlist');
+  $('traceHead').textContent = S.traces.length ? 'Traces (' + S.traces.length + ')' : 'Traces';
+  if (!S.traces.length) { el.innerHTML = '<p class="empty-side">No traces yet.</p>'; return; }
+  el.innerHTML = S.traces.map((t) => {
+    const len = t.trim ? t.trim.e - t.trim.s : 0;
+    const dir = t.orientUsed === 'R' ? 'reverse' : t.orientUsed === 'F' ? 'forward' : 'not aligned';
+    const idt = t.identity != null ? ', closest other read ' + (t.identity * 100).toFixed(t.identity > 0.99 && t.identity < 1 ? 1 : 0) + '% identical' : '';
+    const flags = [...(t.flags || [])];
+    if (t.orientUsed && S.aln && S.aln.traces.length > 1) {
+      if (t.overlap < 0.5) flags.push('Only ' + Math.round(t.overlap * 100) + '% of this read overlaps the other reads. It may come from a different amplicon; untick it to leave it out.');
+      else if (t.identity != null && t.identity < 0.9) flags.push('No other read is more than ' + Math.round(t.identity * 100) + '% identical to this one. Check that it comes from the same amplicon.');
+    }
+    return `<div class="trace${t.include ? '' : ' off'}" data-id="${t.id}">
+      <input type="checkbox" data-act="inc" ${t.include ? 'checked' : ''} aria-label="Include ${esc(t.name)} in the alignment">
+      <div style="min-width:0;display:grid;gap:3px">
+        <div class="tname" title="${esc(t.fileName)}">${esc(t.name)}</div>
+        <input class="tsample" data-act="sample" value="${esc(t.sample)}" aria-label="Sample name for ${esc(t.name)}" title="Traces sharing a sample name are merged into one genotype on export">
+        <div class="tstats">${t.trim ? `bases ${t.trim.s + 1}–${t.trim.e} (${len} bp), ${dir}${idt}` : ''}</div>
+      </div>
+      <div class="tside">
+        <select data-act="orient" aria-label="Read direction">
+          <option value="auto" ${t.orient === 'auto' ? 'selected' : ''}>Auto</option>
+          <option value="F" ${t.orient === 'F' ? 'selected' : ''}>Forward</option>
+          <option value="R" ${t.orient === 'R' ? 'selected' : ''}>Reverse</option>
+        </select>
+        <button class="xbtn" data-act="rm">Remove</button>
+      </div>
+      ${flags.map((f) => `<div class="tflag">${esc(f)}</div>`).join('')}
+      <details class="trim"${t.manualTrim ? ' open' : ''}><summary>Trim range${t.manualTrim ? ' (set by hand)' : ''}</summary>
+        <div class="trimrow"><label>From <input type="number" data-act="ts" min="1" max="${t.raw.bases.length}" value="${t.trim ? t.trim.s + 1 : 1}"></label>
+        <label>to <input type="number" data-act="te" min="1" max="${t.raw.bases.length}" value="${t.trim ? t.trim.e : t.raw.bases.length}"></label>
+        <span class="hint">of ${t.raw.bases.length}</span>
+        ${t.manualTrim ? '<button class="xbtn" data-act="tauto">Use automatic</button>' : ''}</div>
+      </details>
+    </div>`;
+  }).join('');
+}
+
+$('tlist').addEventListener('change', (e) => {
+  const row = e.target.closest('.trace'); if (!row) return;
+  const t = S.traces.find((x) => x.id === row.dataset.id); if (!t) return;
+  const act = e.target.dataset.act;
+  if (act === 'inc') { t.include = e.target.checked; markDirty(); schedule('align'); }
+  else if (act === 'orient') { t.orient = e.target.value; markDirty(); schedule('align'); }
+  else if (act === 'sample') { t.sample = e.target.value.trim() || t.name; markDirty(); }
+  else if (act === 'ts' || act === 'te') {
+    const s = parseInt(row.querySelector('[data-act=ts]').value, 10), en = parseInt(row.querySelector('[data-act=te]').value, 10);
+    if (Number.isFinite(s) && Number.isFinite(en) && en > s) { t.manualTrim = { s: s - 1, e: en }; markDirty(); schedule('calls'); }
+  }
+});
+$('tlist').addEventListener('click', (e) => {
+  const act = e.target.dataset.act; if (act !== 'rm' && act !== 'tauto') return;
+  const row = e.target.closest('.trace'); const t = S.traces.find((x) => x.id === row.dataset.id); if (!t) return;
+  if (act === 'rm') { S.traces = S.traces.filter((x) => x !== t); delete S.ovr[t.id]; markDirty(); schedule('align', 0); }
+  else { t.manualTrim = null; markDirty(); schedule('calls', 0); }
+});
+
+/* ---------------- rendering: alignment canvas ---------------- */
+const cv = $('aln'), sc = $('alnScroll'), spacer = $('alnSpacer'), ovw = $('ovw');
+let LABEL_W = 190; const RULER_H = 22, CONS_H = 22, HEAD_H = RULER_H + CONS_H;
+const rowH = () => (ZOOMS[S.view.zoom] >= 8 ? 20 : 12);
+const cellW = () => ZOOMS[S.view.zoom];
+
+function updateSpacer() {
+  if (!S.aln) { spacer.style.width = '1px'; spacer.style.height = '1px'; return; }
+  spacer.style.width = (LABEL_W + S.aln.cols * cellW() + 24) + 'px';
+  spacer.style.height = (HEAD_H + S.aln.traces.length * rowH() + 12) + 'px';
+}
+function sizeCanvas(c, w, h) {
+  const dpr = window.devicePixelRatio || 1;
+  if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
+  c.style.width = w + 'px'; c.style.height = h + 'px';
+  const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); return g;
+}
+
+let drawQueued = false;
+function drawAln() { if (drawQueued) return; drawQueued = true; requestAnimationFrame(() => { drawQueued = false; paintAln(); paintOverview(); }); }
+
+function baseColor(code) { return COL[code] || COL.muted; }
+
+function paintAln() {
+  const W = sc.clientWidth, H = sc.clientHeight;
+  const lw = W < 700 ? 110 : 190; if (lw !== LABEL_W) { LABEL_W = lw; updateSpacer(); }
+  const g = sizeCanvas(cv, W, H);
+  g.fillStyle = '#FFFFFF'; g.fillRect(0, 0, W, H);
+  $('welcome').hidden = !!S.traces.length;
+  if (!S.aln || !S.info) return;
+  const A = S.aln, I = S.info, cw = cellW(), rh = rowH(), sx = sc.scrollLeft, sy = sc.scrollTop;
+  const c0 = Math.max(0, Math.floor(sx / cw)), c1 = Math.min(A.cols, Math.ceil((sx + W - LABEL_W) / cw) + 1);
+  const r0 = Math.max(0, Math.floor(sy / rh)), r1 = Math.min(A.traces.length, Math.ceil((sy + H - HEAD_H) / rh) + 1);
+  const letters = cw >= 8;
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.font = `700 ${cw >= 12 ? 13 : 11}px ${MONO}`;
+  // selected range band
+  const rg = rangeCols();
+  if (rg) { const x0 = LABEL_W + rg[0] * cw - sx, x1 = LABEL_W + (rg[1] + 1) * cw - sx; g.fillStyle = '#EEF3FB'; g.fillRect(x0, HEAD_H, x1 - x0, H - HEAD_H); }
+  // selected column band
+  if (S.sel >= c0 && S.sel < c1) { g.fillStyle = '#E3EAF7'; g.fillRect(LABEL_W + S.sel * cw - sx, HEAD_H, cw, H - HEAD_H); }
+  for (let r = r0; r < r1; r++) {
+    const t = A.traces[r], y = HEAD_H + r * rh - sy;
+    for (let c = c0; c < c1; c++) {
+      const v = t.rowAt[c]; if (v === -2) continue;
+      const x = LABEL_W + c * cw - sx;
+      if (v === -1) { g.fillStyle = COL.muted; g.fillRect(x + 1, y + rh / 2 - 0.5, cw - 2, 1); continue; }
+      const code = effCode(t, v), cons = I.cons[c], conf = isConf(t, v), het = isHet(code), same = code === cons;
+      if (!letters) {
+        g.fillStyle = code === 'N' ? '#E8ECEA' : het ? COL.het : same ? COL.match : baseColor(code);
+        g.globalAlpha = conf ? 1 : 0.35; g.fillRect(x, y + 2, Math.max(1, cw - (cw > 3 ? 1 : 0)), rh - 4); g.globalAlpha = 1; continue;
+      }
+      if (het) { g.fillStyle = COL.hetBg; g.fillRect(x, y + 1, cw, rh - 2); }
+      else if (!same && code !== 'N' && conf && cons !== '-' ) { g.fillStyle = baseColor(code); g.globalAlpha = 0.14; g.fillRect(x, y + 1, cw, rh - 2); g.globalAlpha = 1; }
+      g.globalAlpha = conf ? 1 : 0.35;
+      if (S.view.dots && same && !het) { g.fillStyle = COL.muted; g.fillRect(x + cw / 2 - 1, y + rh / 2 - 1, 2, 2); }
+      else { g.fillStyle = het ? COL.ink : code === 'N' ? COL.muted : baseColor(code); g.fillText(code, x + cw / 2, y + rh / 2 + 1); }
+      g.globalAlpha = 1;
+      if (isOvr(t, v)) { g.fillStyle = COL.sel; g.fillRect(x + 1, y + rh - 3, cw - 2, 2); }
+    }
+  }
+  // selected column outline
+  if (S.sel >= c0 && S.sel < c1) { const x = LABEL_W + S.sel * cw - sx; g.strokeStyle = COL.sel; g.lineWidth = 1.5; g.strokeRect(x + 0.75, 0.75, cw - 1.5, H - 1.5); }
+  // header: ruler + consensus
+  g.fillStyle = COL.sunk; g.fillRect(LABEL_W, 0, W - LABEL_W, HEAD_H);
+  if (rg) { const x0 = LABEL_W + rg[0] * cw - sx, x1 = LABEL_W + (rg[1] + 1) * cw - sx; g.fillStyle = '#D3DEF3'; g.fillRect(x0, 0, x1 - x0, RULER_H); g.fillStyle = COL.sel; g.fillRect(x0, RULER_H - 2, x1 - x0, 2); }
+  g.fillStyle = COL.rule; g.fillRect(0, HEAD_H - 1, W, 1); g.fillRect(0, RULER_H - 0.5, W, 0.5);
+  const step = cw >= 12 ? 10 : cw >= 8 ? 20 : cw >= 5 ? 50 : 100;
+  g.font = `500 10px ${MONO}`; g.textBaseline = 'alphabetic';
+  for (let c = c0; c < c1; c++) {
+    const x = LABEL_W + c * cw - sx, p = I.pos[c];
+    if (!p.includes('+') && (+p % step === 0 || +p === 1)) { g.fillStyle = COL.muted; g.textAlign = 'left'; g.fillText(p, x + 1, 11); g.fillRect(x, 12, 1, 4); }
+    const a = I.annAt.get(c);
+    if (I.variable[c] || a) {
+      g.fillStyle = I.kind[c] === 'indel' ? COL.ink : I.kind[c] === 'het' ? COL.het : I.kind[c] === 'snp' ? COL.T : COL.muted;
+      g.fillRect(x, RULER_H - 5, Math.max(cw, 2), 4);
+      if (a) { g.fillStyle = a.status === 'confirmed' ? COL.A : a.status === 'artifact' ? COL.muted : COL.het; g.beginPath(); g.arc(x + cw / 2, RULER_H - 10, 3, 0, 7); g.fill(); }
+    }
+  }
+  if (letters) {
+    g.font = `700 ${cw >= 12 ? 13 : 11}px ${MONO}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    for (let c = c0; c < c1; c++) { const k = I.cons[c]; if (k === ' ') continue; const x = LABEL_W + c * cw - sx; g.fillStyle = k === '-' ? COL.muted : isHet(k) ? COL.ink : baseColor(k); if (isHet(k)) { g.fillStyle = COL.hetBg; g.fillRect(x, RULER_H + 2, cw, CONS_H - 4); g.fillStyle = COL.ink; } g.fillText(k, x + cw / 2, RULER_H + CONS_H / 2 + 1); }
+  } else {
+    for (let c = c0; c < c1; c++) { const k = I.cons[c]; if (k === ' ') continue; const x = LABEL_W + c * cw - sx; g.fillStyle = k === '-' ? '#E8ECEA' : isHet(k) ? COL.het : COL.match; g.fillRect(x, RULER_H + 4, Math.max(1, cw - 1), CONS_H - 8); }
+  }
+  if (S.sel >= c0 && S.sel < c1) { const x = LABEL_W + S.sel * cw - sx; g.strokeStyle = COL.sel; g.lineWidth = 1.5; g.strokeRect(x + 0.75, 0.75, cw - 1.5, HEAD_H - 1); }
+  // label column
+  g.fillStyle = COL.panel; g.fillRect(0, 0, LABEL_W, H);
+  g.fillStyle = COL.rule; g.fillRect(LABEL_W - 1, 0, 1, H);
+  g.textAlign = 'left'; g.textBaseline = 'middle';
+  g.font = `700 12px ${UIF}`; g.fillStyle = COL.ink; g.fillText('Consensus', 12, RULER_H + CONS_H / 2 + 1);
+  g.font = `400 11px ${UIF}`; g.fillStyle = COL.muted; g.fillText(rg ? 'Positions ' + I.pos[rg[0]] + '–' + I.pos[rg[1]] : S.sel >= 0 ? 'Position ' + I.pos[S.sel] : 'Position', 12, RULER_H / 2 + 1);
+  g.save(); g.beginPath(); g.rect(0, HEAD_H, LABEL_W, H - HEAD_H); g.clip();
+  g.font = `400 ${rh >= 20 ? 12 : 10}px ${UIF}`;
+  for (let r = r0; r < r1; r++) {
+    const t = A.traces[r], y = HEAD_H + r * rh - sy + rh / 2 + 1;
+    g.fillStyle = COL.muted; g.fillText(t.orientUsed === 'R' ? '←' : '→', 10, y);
+    g.fillStyle = COL.ink; g.fillText(fit(g, t.name, LABEL_W - 34), 26, y);
+  }
+  g.restore();
+}
+function fit(g, s, w) { if (g.measureText(s).width <= w) return s; let lo = 0, hi = s.length; while (lo < hi) { const m = (lo + hi + 1) >> 1; if (g.measureText(s.slice(0, m) + '…').width <= w) lo = m; else hi = m - 1; } return s.slice(0, lo) + '…'; }
+
+function paintOverview() {
+  const W = ovw.clientWidth, H = ovw.clientHeight; if (!W) return;
+  const g = sizeCanvas(ovw, W, H);
+  g.fillStyle = COL.sunk; g.fillRect(0, 0, W, H);
+  if (!S.aln || !S.info) return;
+  const A = S.aln, I = S.info, cols = A.cols;
+  // coverage profile
+  const maxCov = A.traces.length;
+  g.fillStyle = '#DCE2DE';
+  for (let x = 0; x < W; x++) { const c = Math.min(cols - 1, Math.floor(x / W * cols)); const h = (I.cov[c] / maxCov) * (H - 12); g.fillRect(x, H - h, 1, h); }
+  for (const c of I.sites) {
+    const x = Math.floor(c / cols * W), a = I.annAt.get(c);
+    g.fillStyle = I.kind[c] === 'indel' ? COL.ink : I.kind[c] === 'het' ? COL.het : I.kind[c] === 'snp' ? COL.T : COL.muted;
+    g.fillRect(x, a ? 0 : 6, 2, a ? H : H - 6);
+  }
+  const cw = cellW(), vw = sc.clientWidth - LABEL_W;
+  const x0 = sc.scrollLeft / cw / cols * W, x1 = (sc.scrollLeft + vw) / cw / cols * W;
+  g.strokeStyle = COL.ink; g.lineWidth = 1.5; g.strokeRect(Math.max(0.75, x0), 0.75, Math.min(W - 1.5, x1 - x0), H - 1.5);
+  const rg = rangeCols();
+  if (rg) { g.fillStyle = 'rgba(30,93,194,.22)'; const a = rg[0] / cols * W, b = (rg[1] + 1) / cols * W; g.fillRect(a, 0, Math.max(2, b - a), H); }
+  if (S.sel >= 0) { g.fillStyle = COL.sel; g.fillRect(Math.floor(S.sel / cols * W) - 1, 0, 3, H); }
+}
+
+sc.addEventListener('scroll', drawAln, { passive: true });
+cv.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  let dx = e.deltaX, dy = e.deltaY;
+  if ((e.shiftKey || sc.scrollHeight <= sc.clientHeight + 1) && !dx) { dx = dy; dy = 0; }
+  const k = e.deltaMode === 1 ? 16 : 1; sc.scrollLeft += dx * k; sc.scrollTop += dy * k;
+}, { passive: false });
+let drag = null;
+cv.addEventListener('pointerdown', (e) => {
+  drag = { x: e.clientX, y: e.clientY, sl: sc.scrollLeft, st: sc.scrollTop, moved: false, id: e.pointerId };
+});
+cv.addEventListener('pointermove', (e) => {
+  if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (!drag.moved && Math.hypot(dx, dy) > 5) { drag.moved = true; cv.setPointerCapture(drag.id); cv.style.cursor = 'grabbing'; }
+  if (drag.moved) { sc.scrollLeft = drag.sl - dx; sc.scrollTop = drag.st - dy; }
+});
+cv.addEventListener('pointerup', (e) => {
+  const d = drag; drag = null; cv.style.cursor = '';
+  if (!d || d.moved || !S.aln) return;
+  const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  if (x < LABEL_W) return;
+  const c = Math.floor((x - LABEL_W + sc.scrollLeft) / cellW());
+  if (c >= 0 && c < S.aln.cols) { if (e.shiftKey && S.sel >= 0) extendRange(c, false); else select(c, false); }
+  cv.focus({ preventScroll: true });
+});
+cv.addEventListener('pointercancel', () => { drag = null; cv.style.cursor = ''; });
+ovw.addEventListener('click', (e) => {
+  if (!S.aln) return; const r = ovw.getBoundingClientRect();
+  const c = Math.floor((e.clientX - r.left) / r.width * S.aln.cols); centerOn(c); drawAln();
+});
+
+function centerOn(c) { const vw = sc.clientWidth - LABEL_W; sc.scrollLeft = Math.max(0, c * cellW() - vw / 2 + cellW() / 2); }
+function ensureVisible(c) { const cw = cellW(), vw = sc.clientWidth - LABEL_W, x = c * cw; if (x < sc.scrollLeft + cw || x > sc.scrollLeft + vw - 2 * cw) centerOn(c); }
+
+function rangeCols() { if (!S.range || !S.aln) return null; const a = Math.min(S.range.a, S.range.b), b = Math.max(S.range.a, S.range.b); return [a, Math.min(b, S.aln.cols - 1)]; }
+function extendRange(c, scroll = true) {
+  if (!S.aln) return;
+  c = Math.max(0, Math.min(S.aln.cols - 1, c));
+  const a = S.range ? S.range.a : (S.sel >= 0 ? S.sel : c);
+  S.range = { a, b: c, locA: S.range ? S.range.locA : makeLoc(a), locB: makeLoc(c) };
+  if (scroll) ensureVisible(c);
+  renderRangeInfo(); drawAln();
+}
+function clearRange() { if (!S.range) return; S.range = null; renderRangeInfo(); drawAln(); }
+function renderRangeInfo() {
+  const el = $('rangeInfo'), rg = rangeCols();
+  if (!rg || !S.info) { el.hidden = true; return; }
+  el.hidden = false;
+  el.querySelector('span').textContent = 'Positions ' + S.info.pos[rg[0]] + '–' + S.info.pos[rg[1]] + ' selected (' + (rg[1] - rg[0] + 1) + ' columns)';
+}
+function select(c, scroll = true) {
+  if (!S.aln) return;
+  if (S.range) { S.range = null; renderRangeInfo(); }
+  S.sel = c; S.selLoc = makeLoc(c);
+  if (scroll) ensureVisible(c);
+  drawAln(); renderSites(); renderInspector();
+}
+
+$('zoomIn').onclick = () => setZoom(S.view.zoom + 1);
+$('zoomOut').onclick = () => setZoom(S.view.zoom - 1);
+function setZoom(z) {
+  z = Math.max(0, Math.min(ZOOMS.length - 1, z)); if (z === S.view.zoom) return;
+  const vw = sc.clientWidth - LABEL_W, centerCol = (sc.scrollLeft + vw / 2) / cellW();
+  S.view.zoom = z; updateSpacer();
+  const focus = S.sel >= 0 ? S.sel : centerCol; sc.scrollLeft = Math.max(0, focus * cellW() - vw / 2);
+  $('zoomIn').disabled = z === ZOOMS.length - 1; $('zoomOut').disabled = z === 0;
+  drawAln();
+}
+$('dots').onchange = (e) => { S.view.dots = e.target.checked; drawAln(); };
+
+/* keyboard */
+document.addEventListener('keydown', (e) => {
+  if (e.target.closest && e.target.closest('input,select,textarea,[contenteditable],dialog')) return;
+  if (!S.aln || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === 'Escape' && S.range) { clearRange(); return; }
+  if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && e.shiftKey) {
+    e.preventDefault(); const d = e.key === 'ArrowRight' ? 1 : -1;
+    extendRange((S.range ? S.range.b : Math.max(0, S.sel)) + d);
+  } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+    e.preventDefault(); const d = e.key === 'ArrowRight' ? 1 : -1;
+    select(Math.max(0, Math.min(S.aln.cols - 1, (S.sel < 0 ? 0 : S.sel + d))));
+  } else if (e.key === ']' || e.key === '[') { e.preventDefault(); jumpSite(e.key === ']' ? 1 : -1); }
+});
+function visibleSites() {
+  const I = S.info; if (!I) return [];
+  const f = S.view.filter;
+  return I.sites.filter((c) => f === 'all' ? (I.variable[c] || I.annAt.has(c)) : f === 'het' ? I.kind[c] === 'het' : f === 'indel' ? I.kind[c] === 'indel' : I.annAt.has(c));
+}
+function jumpSite(d) {
+  const list = visibleSites(); if (!list.length) return;
+  let target;
+  if (d > 0) target = list.find((c) => c > S.sel) ?? list[0]; else target = [...list].reverse().find((c) => c < S.sel) ?? list[list.length - 1];
+  select(target);
+  const b = $('siteList').querySelector(`[data-c="${target}"]`); if (b) b.scrollIntoView({ block: 'nearest' });
+}
+
+/* ---------------- rendering: site list ---------------- */
+function summarizeCounts(c) {
+  const m = S.info.counts[c]; const arr = [...m.entries()].sort((a, b) => b[1] - a[1]);
+  return arr.map(([k, v]) => (k === '-' ? 'gap' : k) + '\u00a0' + v).join(', ');
+}
+function renderSites() {
+  const el = $('siteList');
+  if (!S.info) { $('siteHead').textContent = 'Variant sites'; el.innerHTML = S.traces.length ? '' : '<p class="ins-empty">Variable positions appear here once traces are aligned.</p>'; return; }
+  const list = visibleSites(); const I = S.info;
+  $('siteHead').textContent = 'Variant sites (' + list.length + ')';
+  if (!list.length) { el.innerHTML = '<p class="ins-empty">' + (S.view.filter === 'ann' ? 'No annotated sites yet. Select a site and choose Annotate this site.' : 'No sites match this filter.') + '</p>'; return; }
+  el.innerHTML = list.map((c) => {
+    const a = I.annAt.get(c), k = I.kind[c];
+    return `<button class="site" data-c="${c}" ${c === S.sel ? 'aria-current="true"' : ''}>
+      <span class="pos">${esc(I.pos[c])}</span>
+      <span class="calls">${esc(summarizeCounts(c))}</span>
+      <span class="kind ${k || ''}">${k === 'indel' ? 'gap' : k === 'het' ? 'double peak' : k === 'snp' ? 'SNP' : 'no variation'}</span>
+      ${a ? `<span class="aname"><span class="st-dot st-${a.status}"></span>${esc(a.name || 'Unnamed')}${a.kid ? ' (' + esc(a.kid) + ')' : ''}</span>` : ''}
+    </button>`;
+  }).join('');
+}
+$('siteList').addEventListener('click', (e) => { const b = e.target.closest('.site'); if (b) select(+b.dataset.c); });
+$('siteFilter').onchange = (e) => { S.view.filter = e.target.value; renderSites(); };
+
+/* ---------------- rendering: inspector ---------------- */
+const OVR_OPTS = ['A', 'C', 'G', 'T', 'R', 'Y', 'S', 'W', 'K', 'M', 'N'];
+const OVR_LABEL = { R: 'R (A/G)', Y: 'Y (C/T)', S: 'S (C/G)', W: 'W (A/T)', K: 'K (G/T)', M: 'M (A/C)', N: 'N (no call)' };
+let insRows = [];
+
+function renderInspector() {
+  const el = $('inspector');
+  if (!S.aln || !S.info || S.sel < 0) {
+    el.innerHTML = `<div class="ins-empty"><p>Select a column in the alignment or a site from the list to see every trace's chromatogram at that position, annotate the variant, and correct calls.</p><p class="keys"><kbd>←</kbd> <kbd>→</kbd> move one column, <kbd>[</kbd> <kbd>]</kbd> previous or next variant site. Shift-click or <kbd>Shift</kbd>+<kbd>→</kbd> selects a range of positions.</p></div>`;
+    insRows = []; return;
+  }
+  const c = S.sel, I = S.info, a = I.annAt.get(c);
+  const cov = S.aln.traces.filter((t) => t.rowAt[c] !== -2);
+  const unc = S.aln.traces.filter((t) => t.rowAt[c] === -2);
+  const consK = I.cons[c];
+  const rank = (t) => { const v = t.rowAt[c]; if (v === -1) return 1; const k = effCode(t, v); return isHet(k) ? 0 : k !== consK ? 1 : 2; };
+  cov.sort((x, y) => rank(x) - rank(y));
+  const chips = [...I.counts[c].entries()].sort((x, y) => y[1] - x[1]).map(([k, v]) => `<span class="chip"><b style="color:${isHet(k) || k === '-' ? COL.ink : baseColor(k)}">${esc(k === '-' ? 'gap' : k)}</b> ${v}${isHet(k) ? ' <span class="hint">' + DP.ALLELES[k] + '</span>' : ''}</span>`).join('');
+  const kindTxt = I.kind[c] === 'indel' ? 'Gap in some traces.' : I.kind[c] === 'het' ? 'Double peaks present.' : I.kind[c] === 'snp' ? 'Single-peak calls differ.' : 'No confident variation here.';
+  let html = `<div class="ins-top">
+    <div><h2>Position ${esc(I.pos[c])}</h2><p>Column ${c + 1} of ${S.aln.cols}. ${cov.length} of ${S.aln.traces.length} traces cover this site. ${kindTxt}</p></div>
+    <div class="ins-nav"><button class="btn" data-nav="-1" title="Previous variant site ( [ )">Previous site</button><button class="btn" data-nav="1" title="Next variant site ( ] )">Next site</button></div>
+    <div class="chips">${chips}</div></div>`;
+  if (a) {
+    html += `<div class="ann" data-ann="${a.id}">
+      <label>Name<input data-f="name" value="${esc(a.name)}" placeholder="e.g. PRNP c.411"></label>
+      <label>Known ID<input data-f="kid" value="${esc(a.kid)}" placeholder="rs or EVA ID"></label>
+      <label>Type<select data-f="type">${['SNP', 'Indel', 'Other'].map((o) => `<option ${a.type === o ? 'selected' : ''}>${o}</option>`).join('')}</select></label>
+      <label>Status<select data-f="status">${[['candidate', 'Candidate'], ['confirmed', 'Confirmed'], ['artifact', 'Artifact']].map(([v, l]) => `<option value="${v}" ${a.status === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+      <label class="wide">Notes<textarea data-f="notes" rows="1" placeholder="Primer, amplicon, anything to remember">${esc(a.notes)}</textarea></label>
+      <button class="btn rm" data-act="delann">Remove annotation</button>
+    </div>`;
+  } else {
+    html += `<div class="ann-none"><p>This site isn't annotated.</p><button class="btn" data-act="addann">Annotate this site</button></div>`;
+  }
+  html += '<div class="stack">';
+  insRows = [];
+  cov.forEach((t, k) => {
+    const v = t.rowAt[c];
+    if (v === -1) {
+      html += `<div class="srow"><div class="smeta"><span class="nm" title="${esc(t.fileName)}">${esc(t.name)}</span><span class="sub">${t.sample !== t.name ? esc(t.sample) + ', ' : ''}${t.orientUsed === 'R' ? 'reverse' : 'forward'} read</span><div class="callrow"><span class="call">–</span><span class="sub">gap in this trace</span></div></div><canvas data-k="${k}"></canvas></div>`;
+    } else {
+      const code = effCode(t, v), call = t.calls[v], ov = isOvr(t, v), autoC = t.orientUsed === 'R' ? DP.COMP[call.code] : call.code;
+      const opts = [`<option value="">Auto (${autoC})</option>`].concat(OVR_OPTS.map((o) => `<option value="${o}" ${ov && code === o ? 'selected' : ''}>${OVR_LABEL[o] || o}</option>`)).join('');
+      html += `<div class="srow${isConf(t, v) ? '' : ' low'}"><div class="smeta">
+        <span class="nm" title="${esc(t.fileName)}">${esc(t.name)}</span>
+        <span class="sub">${t.sample !== t.name ? esc(t.sample) + ', ' : ''}${t.orientUsed === 'R' ? 'reverse' : 'forward'} read, base ${v + 1}</span>
+        <div class="callrow"><span class="call${isHet(code) ? ' het' : ''}${ov ? ' ovr' : ''}" style="color:${isHet(code) ? COL.ink : baseColor(code)}">${esc(code)}</span>
+        <select data-ovr="${t.id}" data-raw="${v}" aria-label="Call for ${esc(t.name)}">${opts}</select></div>
+        <span class="sub">Peak ratio ${call.ratio.toFixed(2)}${call.q >= 0 ? ', Q' + call.q : ''}${ov ? ', edited' : ''}</span>
+      </div><canvas data-k="${k}"></canvas></div>`;
+    }
+    insRows.push(t);
+  });
+  html += '</div>';
+  if (unc.length) html += `<p class="uncov">Not covered here: ${unc.map((t) => esc(t.name)).join(', ')}.</p>`;
+  el.innerHTML = html;
+  requestAnimationFrame(paintChromos);
+}
+
+function paintChromos() {
+  const c = S.sel; if (c < 0 || !S.aln) return;
+  $('inspector').querySelectorAll('canvas[data-k]').forEach((cn) => {
+    const t = insRows[+cn.dataset.k]; if (!t) return;
+    const v = t.rowAt[c];
+    let center, hi = -1;
+    if (v >= 0) { center = t.raw.ploc[v]; hi = v; }
+    else {
+      let L = -1, R = -1;
+      for (let k = c - 1; k >= 0; k--) if (t.rowAt[k] >= 0) { L = t.rowAt[k]; break; }
+      for (let k = c + 1; k < S.aln.cols; k++) if (t.rowAt[k] >= 0) { R = t.rowAt[k]; break; }
+      if (L < 0 || R < 0) return;
+      center = (t.raw.ploc[L] + t.raw.ploc[R]) / 2;
+    }
+    drawChromo(cn, t, center, hi);
+  });
+}
+
+function drawChromo(cn, t, center, hi) {
+  const W = cn.clientWidth, H = cn.clientHeight; if (!W) return;
+  const g = sizeCanvas(cn, W, H);
+  const raw = t.raw, n = raw.bases.length, rev = t.orientUsed === 'R';
+  // nearest base index to center
+  let k = 0; { let lo = 0, h = n - 1; while (lo < h) { const m = (lo + h) >> 1; if (raw.ploc[m] < center) lo = m + 1; else h = m; } k = lo; }
+  const span = Math.max(4, Math.min(9, Math.round(W / 46)));
+  const iL = Math.max(0, k - span), iR = Math.min(n - 1, k + span);
+  const pad = 8;
+  const sL = Math.max(0, raw.ploc[iL] - pad), sR = Math.min(raw.traceLen - 1, raw.ploc[iR] + pad);
+  const plotH = H - 20;
+  const X = (s) => rev ? (sR - s) / (sR - sL) * W : (s - sL) / (sR - sL) * W;
+  let mx = 1;
+  for (const b of DP.BASES) { const ch = raw.data[b]; for (let s = sL; s <= sR; s++) if (ch[s] > mx) mx = ch[s]; }
+  g.fillStyle = '#FFFFFF'; g.fillRect(0, 0, W, H);
+  // highlight band
+  const hx = X(center);
+  const bw = Math.max(8, W / (2 * span + 2) * 0.8);
+  g.fillStyle = hi >= 0 ? '#E3EAF7' : '#F1F4F2'; g.fillRect(hx - bw / 2, 0, bw, plotH);
+  g.strokeStyle = COL.sel; g.globalAlpha = 0.6; g.lineWidth = 1; g.beginPath(); g.moveTo(Math.round(hx) + 0.5, 0); g.lineTo(Math.round(hx) + 0.5, plotH); g.stroke(); g.globalAlpha = 1;
+  // traces
+  g.lineWidth = 1.4; g.lineJoin = 'round';
+  for (const b of DP.BASES) {
+    const ch = raw.data[b]; const shown = rev ? DP.COMP[b] : b;
+    g.strokeStyle = COL[shown]; g.beginPath();
+    for (let s = sL; s <= sR; s++) { const x = X(s), y = plotH - 2 - (ch[s] / mx) * (plotH - 6); if (s === sL) g.moveTo(x, y); else g.lineTo(x, y); }
+    g.stroke();
+  }
+  // trimmed-out shading
+  const tS = t.trim.s, tE = t.trim.e;
+  if (tS > 0 && raw.ploc[tS] > sL) { const a = X(sL), b = X(Math.min(sR, raw.ploc[Math.min(n - 1, tS)] - 4)); g.fillStyle = 'rgba(230,235,232,.7)'; g.fillRect(Math.min(a, b), 0, Math.abs(b - a), plotH); }
+  if (tE < n && raw.ploc[tE - 1] < sR) { const a = X(Math.max(sL, raw.ploc[Math.max(0, tE - 1)] + 4)), b = X(sR); g.fillStyle = 'rgba(230,235,232,.7)'; g.fillRect(Math.min(a, b), 0, Math.abs(b - a), plotH); }
+  // base labels
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (let i = iL; i <= iR; i++) {
+    const x = X(raw.ploc[i]); const code = effCode(t, i);
+    if (i === hi) { g.fillStyle = isHet(code) ? COL.hetBg : '#E3EAF7'; g.fillRect(x - 8, plotH + 2, 16, 17); g.font = `700 13px ${MONO}`; }
+    else g.font = `500 11px ${MONO}`;
+    g.fillStyle = isHet(code) ? COL.ink : baseColor(code);
+    if (i < tS || i >= tE) g.globalAlpha = 0.4;
+    g.fillText(code, x, plotH + 11); g.globalAlpha = 1;
+  }
+}
+
+$('inspector').addEventListener('change', (e) => {
+  const s = e.target;
+  if (s.dataset.ovr) {
+    const t = S.traces.find((x) => x.id === s.dataset.ovr); const raw = +s.dataset.raw; if (!t) return;
+    if (!S.ovr[t.id]) S.ovr[t.id] = {};
+    if (s.value === '') delete S.ovr[t.id][raw];
+    else S.ovr[t.id][raw] = t.orientUsed === 'R' ? DP.COMP[s.value] : s.value;
+    markDirty(); analyze(); renderAll();
+    const again = $('inspector').querySelector(`[data-ovr="${t.id}"][data-raw="${raw}"]`); if (again) again.focus();
+  }
+});
+$('inspector').addEventListener('input', (e) => {
+  const f = e.target.dataset.f; if (!f) return;
+  const box = e.target.closest('[data-ann]'); const a = S.ann.find((x) => x.id === box.dataset.ann); if (!a) return;
+  a[f] = e.target.value; markDirty();
+  if (f === 'status' || f === 'name' || f === 'kid') { renderSites(); drawAln(); }
+});
+$('inspector').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.nav) return jumpSite(+b.dataset.nav);
+  if (b.dataset.act === 'addann') {
+    const c = S.sel, loc = makeLoc(c);
+    if (!loc.length) { toast('This column has no trace bases to attach an annotation to.', true); return; }
+    const a = { id: uid(), loc, name: '', kid: '', type: S.info.kind[c] === 'indel' ? 'Indel' : 'SNP', status: 'candidate', notes: '' };
+    S.ann.push(a); markDirty(); analyze(); renderAll();
+    const inp = $('inspector').querySelector('[data-f=name]'); if (inp) inp.focus();
+  } else if (b.dataset.act === 'delann') {
+    const id = b.closest('[data-ann]').dataset.ann; S.ann = S.ann.filter((x) => x.id !== id); markDirty(); analyze(); renderAll();
+  }
+});
+
+/* ---------------- render all ---------------- */
+function renderAll() {
+  updateSpacer(); renderTraces(); renderSites(); renderInspector(); drawAln();
+  const has = S.traces.length > 0;
+  $('btnSave').disabled = !has; $('btnExport').disabled = !S.info; $('btnSeq').disabled = !S.info; renderRangeInfo();
+  if (S.aln && S.info) {
+    const nv = S.info.sites.filter((c) => S.info.variable[c]).length;
+    setStatus(`${S.aln.traces.length} of ${S.traces.length} traces aligned, ${S.aln.cols} columns, ${nv} variable site${nv === 1 ? '' : 's'}, ${S.ann.length} annotated`);
+  }
+}
+new ResizeObserver(() => drawAln()).observe(sc);
+let insW = 0;
+new ResizeObserver((ents) => { const w = ents[0].contentRect.width; if (Math.abs(w - insW) > 2) { insW = w; paintChromos(); } }).observe($('inspector'));
+
+/* ---------------- settings ---------------- */
+function bindRange(id, out, key, level, fmt) {
+  $(id).addEventListener('input', (e) => { const v = +e.target.value; S.settings[key] = v; $(out).textContent = fmt(v); markDirty(); if (S.traces.length) schedule(level, 250); });
+}
+bindRange('setRatio', 'outRatio', 'ratio', 'calls', (v) => v.toFixed(2));
+bindRange('setTrim', 'outTrim', 'trim', 'calls', (v) => v.toFixed(3).replace(/0$/, ''));
+bindRange('setQ', 'outQ', 'minQ', 'analyze', (v) => String(v));
+function syncSettingsUI() {
+  $('setRatio').value = S.settings.ratio; $('outRatio').textContent = S.settings.ratio.toFixed(2);
+  $('setTrim').value = S.settings.trim; $('outTrim').textContent = S.settings.trim.toFixed(3).replace(/0$/, '');
+  $('setQ').value = S.settings.minQ; $('outQ').textContent = String(S.settings.minQ);
+}
+
+/* ---------------- files, drag and drop ---------------- */
+$('btnAdd').onclick = $('btnAdd2').onclick = () => $('fileAb1').click();
+$('fileAb1').onchange = (e) => { addFiles(e.target.files); e.target.value = ''; };
+let dragDepth = 0;
+const hasFiles = (e) => e.dataTransfer && [...e.dataTransfer.types].includes('Files');
+window.addEventListener('dragenter', (e) => { if (!hasFiles(e)) return; e.preventDefault(); dragDepth++; $('drop').hidden = false; });
+window.addEventListener('dragover', (e) => { if (hasFiles(e)) e.preventDefault(); });
+window.addEventListener('dragleave', (e) => { if (!hasFiles(e)) return; dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) $('drop').hidden = true; });
+window.addEventListener('drop', (e) => {
+  if (!hasFiles(e)) return; e.preventDefault(); dragDepth = 0; $('drop').hidden = true;
+  const files = [...e.dataTransfer.files];
+  const proj = files.find((f) => /\.(dpk|gz|json)$/i.test(f.name));
+  if (proj && files.length === 1) openProject(proj); else addFiles(files.filter((f) => !/\.(dpk|gz|json)$/i.test(f.name)));
+});
+
+/* ---------------- save / open ---------------- */
+function download(name, data, type) {
+  const blob = data instanceof Blob ? data : new Blob([data], { type });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+const safeName = () => ($('projName').value.trim() || 'project').replace(/[^\w\-]+/g, '_');
+
+$('btnSave').onclick = async () => {
+  const proj = {
+    app: 'DoublePeak', version: 1, saved: new Date().toISOString(), name: $('projName').value,
+    settings: S.settings,
+    traces: S.traces.map((t) => ({ id: t.id, fileName: t.fileName, name: t.name, sample: t.sample, include: t.include, orient: t.orient, manualTrim: t.manualTrim, ab1: toB64(t.bytes) })),
+    annotations: S.ann.map(({ id, loc, name, kid, type, status, notes }) => ({ id, loc, name, kid, type, status, notes })),
+    overrides: S.ovr,
+  };
+  const json = JSON.stringify(proj);
+  try {
+    if (typeof CompressionStream !== 'undefined') {
+      const gz = await new Response(new Blob([json]).stream().pipeThrough(new CompressionStream('gzip'))).blob();
+      download(safeName() + '.dpk', gz, 'application/gzip');
+    } else download(safeName() + '.dpk', json, 'application/json');
+    S.dirty = false; toast('Project saved as ' + safeName() + '.dpk');
+  } catch (e) { toast('Could not save the project: ' + e.message, true); }
+};
+
+$('btnOpen').onclick = () => $('fileProj').click();
+$('fileProj').onchange = (e) => { if (e.target.files[0]) openProject(e.target.files[0]); e.target.value = ''; };
+async function openProject(file) {
+  if (S.dirty && S.traces.length && !confirm('Opening a project replaces the current one, and it has unsaved changes. Continue?')) return;
+  try {
+    let buf = new Uint8Array(await file.arrayBuffer()), text;
+    if (buf[0] === 0x1f && buf[1] === 0x8b) {
+      if (typeof DecompressionStream === 'undefined') throw new Error('this browser cannot read compressed projects');
+      text = await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+    } else text = new TextDecoder().decode(buf);
+    const p = JSON.parse(text);
+    if (p.app !== 'DoublePeak') throw new Error('this file is not a DoublePeak project');
+    const traces = [];
+    for (const r of p.traces) {
+      const bytes = fromB64(r.ab1); const raw = DP.parseAB1(bytes.buffer);
+      if (raw.qual && !raw.qual.some((q) => q > 0)) raw.qual = null;
+      traces.push({ id: r.id, fileName: r.fileName, name: r.name, sample: r.sample, include: r.include !== false, orient: r.orient || 'auto', manualTrim: r.manualTrim || null, bytes, raw });
+    }
+    S.traces = traces; S.settings = Object.assign({ ratio: 0.33, trim: 0.05, minQ: 20 }, p.settings);
+    S.ann = p.annotations || []; S.ovr = p.overrides || {}; S.sel = -1; S.selLoc = null; S.range = null; S.aln = null; S.info = null;
+    $('projName').value = p.name || baseName(file.name).replace(/\.dpk$/i, '');
+    syncSettingsUI(); S.dirty = false;
+    await runPipeline(LV.calls);
+    toast('Opened ' + (p.name || file.name) + ' with ' + traces.length + ' trace' + (traces.length === 1 ? '' : 's') + ' and ' + S.ann.length + ' annotation' + (S.ann.length === 1 ? '' : 's') + '.');
+  } catch (e) { toast('Could not open the project: ' + e.message, true); }
+}
+$('projName').addEventListener('input', markDirty);
+window.addEventListener('beforeunload', (e) => { if (S.dirty && S.traces.length) { e.preventDefault(); e.returnValue = ''; } });
+
+/* ---------------- export ---------------- */
+const exBtn = $('btnExport'), exMenu = $('exportMenu');
+exBtn.onclick = (e) => { e.stopPropagation(); const open = exMenu.hidden; exMenu.hidden = !open; exBtn.setAttribute('aria-expanded', String(open)); if (open) exMenu.querySelector('button').focus(); };
+document.addEventListener('click', (e) => { if (!exMenu.hidden && !e.target.closest('.menu')) { exMenu.hidden = true; exBtn.setAttribute('aria-expanded', 'false'); } });
+exMenu.addEventListener('keydown', (e) => { if (e.key === 'Escape') { exMenu.hidden = true; exBtn.focus(); } });
+exMenu.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; exMenu.hidden = true; if (b.dataset.x === 'seqtext') openSeqDialog(); else doExport(b.dataset.x); });
+
+const csvCell = (v) => { const s = v == null ? '' : String(v); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+const csv = (rows) => rows.map((r) => r.map(csvCell).join(',')).join('\r\n') + '\r\n';
+
+function sampleGroups() {
+  const m = new Map();
+  for (const t of S.aln.traces) { if (!m.has(t.sample)) m.set(t.sample, []); m.get(t.sample).push(t); }
+  return m;
+}
+function sampleGenotype(ts, c) {
+  const calls = [];
+  for (const t of ts) { const v = t.rowAt[c]; if (v === -2) continue; if (v === -1) { calls.push('-'); continue; } const k = effCode(t, v); if (k === 'N' || !isConf(t, v)) continue; calls.push(k); }
+  const uniq = [...new Set(calls)];
+  if (!uniq.length) return { gt: '', conflict: false };
+  return { gt: uniq.map((k) => DP.ALLELES[k] || k).join(';'), conflict: uniq.length > 1 };
+}
+
+function doExport(kind) {
+  if (!S.info) return;
+  const I = S.info, groups = sampleGroups(), samples = [...groups.keys()];
+  const base = safeName();
+  if (kind === 'annotated' || kind === 'variable') {
+    const cols = kind === 'annotated' ? I.sites.filter((c) => I.annAt.has(c)) : I.sites.filter((c) => I.variable[c] || I.annAt.has(c));
+    if (!cols.length) { toast(kind === 'annotated' ? 'No annotated sites to export yet.' : 'No variable sites to export.', true); return; }
+    const head = ['column', 'position', 'consensus', 'site_type', 'name', 'known_id', 'annotation_type', 'status', 'notes', 'traces_covering', 'sample_conflicts', ...samples];
+    const rows = [head];
+    for (const c of cols) {
+      const a = I.annAt.get(c) || {}; let conflicts = 0;
+      const gts = samples.map((s) => { const r = sampleGenotype(groups.get(s), c); if (r.conflict) conflicts++; return r.gt; });
+      rows.push([c + 1, I.pos[c], I.cons[c], I.kind[c] || '', a.name || '', a.kid || '', a.type || '', a.status || '', a.notes || '', I.cov[c], conflicts, ...gts]);
+    }
+    const unplaced = S.ann.filter((a) => a.col < 0);
+    download(base + (kind === 'annotated' ? '_annotated_sites.csv' : '_variable_sites.csv'), csv(rows), 'text/csv');
+    if (unplaced.length) toast(unplaced.length + ' annotation' + (unplaced.length > 1 ? 's are' : ' is') + ' not in the current alignment and were left out (their traces are removed or excluded).');
+  } else if (kind === 'long') {
+    const cols = I.sites.filter((c) => I.variable[c] || I.annAt.has(c));
+    const rows = [['column', 'position', 'name', 'trace', 'file', 'sample', 'direction', 'call', 'auto_call', 'edited', 'confident', 'peak_ratio', 'quality', 'trace_base']];
+    for (const c of cols) {
+      const a = I.annAt.get(c) || {};
+      for (const t of S.aln.traces) {
+        const v = t.rowAt[c]; if (v === -2) continue;
+        if (v === -1) { rows.push([c + 1, I.pos[c], a.name || '', t.name, t.fileName, t.sample, t.orientUsed === 'R' ? 'reverse' : 'forward', '-', '-', 'no', 'yes', '', '', '']); continue; }
+        const call = t.calls[v];
+        rows.push([c + 1, I.pos[c], a.name || '', t.name, t.fileName, t.sample, t.orientUsed === 'R' ? 'reverse' : 'forward', effCode(t, v), t.orientUsed === 'R' ? DP.COMP[call.code] : call.code, isOvr(t, v) ? 'yes' : 'no', isConf(t, v) ? 'yes' : 'no', call.ratio.toFixed(3), call.q >= 0 ? call.q : '', v + 1]);
+      }
+    }
+    download(base + '_calls_by_trace.csv', csv(rows), 'text/csv');
+  } else if (kind === 'fasta') {
+    const wrap = (s) => s.replace(/(.{80})/g, '$1\n').replace(/\n$/, '');
+    let out = '>consensus\n' + wrap(I.cons.map((k) => (k === ' ' ? '-' : k)).join('')) + '\n';
+    for (const t of S.aln.traces) {
+      let s = ''; for (let c = 0; c < S.aln.cols; c++) { const v = t.rowAt[c]; s += v < 0 ? '-' : effCode(t, v); }
+      out += '>' + t.name.replace(/\s+/g, '_') + ' sample=' + t.sample.replace(/\s+/g, '_') + ' ' + (t.orientUsed === 'R' ? 'reverse' : 'forward') + '\n' + wrap(s) + '\n';
+    }
+    download(base + '_alignment.fasta', out, 'text/plain');
+  }
+}
+
+
+/* ---------------- copy sequences dialog ---------------- */
+const dlg = $('seqDlg');
+$('btnSeq').onclick = () => openSeqDialog();
+$('rangeClear').onclick = () => clearRange();
+function posToCol(p, end) {
+  const I = S.info, cols = S.aln.cols;
+  if (!Number.isFinite(p)) return end ? cols - 1 : 0;
+  let hit = -1;
+  for (let c = 0; c < cols; c++) { const s = I.pos[c]; if (s.includes('+')) continue; const v = +s; if (!end && v >= p) { hit = c; break; } if (end && v <= p) hit = c; }
+  if (hit < 0) return end ? 0 : cols - 1;
+  return hit;
+}
+function numPos(c) { const s = S.info.pos[c]; return s.includes('+') ? parseInt(s, 10) + (c === 0 ? 1 : 0) : +s; }
+function openSeqDialog() {
+  if (!S.info) return;
+  const rg = rangeCols(), I = S.info;
+  const lastNum = (() => { for (let c = S.aln.cols - 1; c >= 0; c--) if (!I.pos[c].includes('+')) return +I.pos[c]; return 1; })();
+  $('sqFrom').value = rg ? Math.max(1, numPos(rg[0])) : 1;
+  $('sqTo').value = rg ? numPos(rg[1]) : lastNum;
+  $('sqFrom').max = $('sqTo').max = lastNum;
+  document.querySelector(`input[name=sqRange][value=${rg ? 'sel' : 'all'}]`).checked = true;
+  const chosen = S.view.seqRows;
+  const rows = [{ id: 'cons', name: 'Consensus' }].concat(S.aln.traces.map((t) => ({ id: t.id, name: t.name + (t.sample !== t.name ? ' (' + t.sample + ')' : '') })));
+  $('sqRows').innerHTML = rows.map((r) => `<label><input type="checkbox" value="${r.id}" ${!chosen || chosen.has(r.id) ? 'checked' : ''}> ${esc(r.name)}</label>`).join('');
+  buildSeqText();
+  dlg.showModal();
+  $('sqText').scrollTop = 0;
+}
+function seqChoices() {
+  const I = S.info, cols = S.aln.cols;
+  let c0 = 0, c1 = cols - 1;
+  if (document.querySelector('input[name=sqRange]:checked').value === 'sel') {
+    const a = parseInt($('sqFrom').value, 10), b = parseInt($('sqTo').value, 10);
+    const rg = rangeCols();
+    if (rg && a === Math.max(1, numPos(rg[0])) && b === numPos(rg[1])) { c0 = rg[0]; c1 = rg[1]; }
+    else { c0 = posToCol(Math.min(a, b), false); c1 = posToCol(Math.max(a, b), true); }
+  }
+  const ids = [...$('sqRows').querySelectorAll('input:checked')].map((i) => i.value);
+  return { c0, c1, ids, fmt: $('sqFmt').value, gaps: $('sqGaps').checked };
+}
+function buildSeqText() {
+  const I = S.info, { c0, c1, ids, fmt, gaps } = seqChoices();
+  S.view.seqRows = new Set(ids);
+  const label = I.pos[c0] + '-' + I.pos[c1];
+  const out = [];
+  for (const id of ids) {
+    let name, desc, s = '';
+    if (id === 'cons') { name = 'consensus'; desc = ''; for (let c = c0; c <= c1; c++) { const k = I.cons[c]; s += k === ' ' ? '-' : k; } }
+    else {
+      const t = S.aln.traces.find((x) => x.id === id); if (!t) continue;
+      name = t.name.replace(/\s+/g, '_'); desc = (t.sample !== t.name ? ' sample=' + t.sample.replace(/\s+/g, '_') : '') + ' ' + (t.orientUsed === 'R' ? 'reverse' : 'forward');
+      for (let c = c0; c <= c1; c++) { const v = t.rowAt[c]; s += v < 0 ? '-' : effCode(t, v); }
+    }
+    if (!gaps) s = s.replace(/-/g, '');
+    if (!s.replace(/-/g, '').length) continue;
+    out.push({ name, desc, s });
+  }
+  let text = '';
+  if (fmt === 'fasta') text = out.map((o) => '>' + o.name + o.desc + ' positions=' + label + '\n' + o.s.replace(/(.{60})/g, '$1\n').replace(/\n$/, '')).join('\n');
+  else if (fmt === 'aligned') { const w = Math.max(0, ...out.map((o) => o.name.length)) + 2; text = out.map((o) => o.name.padEnd(w) + o.s).join('\n'); }
+  else text = out.map((o) => o.s).join('\n');
+  $('sqText').value = text ? text + '\n' : '';
+  const skipped = ids.length - out.length;
+  $('sqInfo').textContent = out.length ? `${out.length} sequence${out.length === 1 ? '' : 's'}, positions ${I.pos[c0]} to ${I.pos[c1]} (${c1 - c0 + 1} alignment columns)${skipped ? '. ' + skipped + ' selected trace' + (skipped === 1 ? ' has' : 's have') + ' no bases in this range and ' + (skipped === 1 ? 'is' : 'are') + ' left out' : ''}.` : 'No sequences selected, or none have bases in this range.';
+  $('sqCopy').disabled = $('sqSave').disabled = !out.length;
+}
+dlg.addEventListener('input', (e) => {
+  if (e.target.id === 'sqFrom' || e.target.id === 'sqTo') document.querySelector('input[name=sqRange][value=sel]').checked = true;
+  if (e.target.id !== 'sqText') buildSeqText();
+});
+dlg.addEventListener('change', (e) => { if (e.target.id !== 'sqText') buildSeqText(); });
+$('sqAll').onclick = () => { $('sqRows').querySelectorAll('input').forEach((i) => { i.checked = true; }); buildSeqText(); };
+$('sqNone').onclick = () => { $('sqRows').querySelectorAll('input').forEach((i) => { i.checked = false; }); buildSeqText(); };
+$('sqClose').onclick = () => dlg.close();
+dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+$('sqCopy').onclick = async () => {
+  const ta = $('sqText');
+  try { await navigator.clipboard.writeText(ta.value); toast('Copied to the clipboard.'); }
+  catch (_) {
+    ta.focus(); ta.select();
+    let ok = false; try { ok = document.execCommand('copy'); } catch (__) {}
+    toast(ok ? 'Copied to the clipboard.' : 'The browser blocked clipboard access. The text is selected, so press Ctrl+C (or Cmd+C) to copy it.', !ok);
+  }
+};
+$('sqSave').onclick = () => {
+  const { c0, c1, fmt } = seqChoices();
+  const range = (c0 === 0 && c1 === S.aln.cols - 1) ? '' : '_' + S.info.pos[c0] + '-' + S.info.pos[c1];
+  download(safeName() + '_sequences' + range.replace(/\+/g, 'i') + (fmt === 'fasta' ? '.fasta' : '.txt'), $('sqText').value, 'text/plain');
+};
+
+/* init */
+setZoom(3); S.view.zoom = 3; updateSpacer();
+$('zoomIn').disabled = false; $('zoomOut').disabled = false;
+renderAll();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawAln);
+})();
+
+</script>
+</body>
+</html>
