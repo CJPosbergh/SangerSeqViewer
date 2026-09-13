@@ -298,9 +298,9 @@ dialog#seqDlg::backdrop{background:rgba(22,32,27,.45)}
         </select></label>
       <label>Genetic code
         <select id="transCode">
-          <option value="1">Standard</option>
-          <option value="2" selected>Vertebrate mitochondrial</option>
-          <option value="5">Invertebrate mitochondrial</option>
+          <option value="1" selected>Standard</option>
+          <option value="2" >Vertebrate mitochondrial</option>
+          <option value="5" >Invertebrate mitochondrial</option>
         </select></label>
       <button class="xbtn" id="transHere">Start frame at selected column</button>
       <span class="hint">Amino acids come from the consensus. Sites that change the protein are underlined in the track.</span>
@@ -731,7 +731,7 @@ const MIN_LEN = 50;
 const S = {
   traces: [], settings: { ratio: 0.33, trim: 0.05, minQ: 20 },
   view: { zoom: 3, dots: false, filter: 'all' },
-  trans: { on: false, frame: 1, code: 2, aaAt: null, codons: null },
+  trans: { on: false, frame: 1, code: 1, aaAt: null, codons: null },
   aln: null, info: null, sel: -1,
   ann: [], ovr: {}, dirty: false, run: 0, nextId: 1,
 };
@@ -1588,7 +1588,7 @@ async function openProject(file) {
       traces.push({ id: r.id, fileName: r.fileName, name: r.name, sample: r.sample, include: r.include !== false, orient: r.orient || 'auto', manualTrim: r.manualTrim || null, bytes, raw });
     }
     S.traces = traces; S.settings = Object.assign({ ratio: 0.33, trim: 0.05, minQ: 20 }, p.settings);
-    const tr = p.translation || {}; S.trans = { on: !!tr.on, frame: tr.frame || 1, code: tr.code || 2, aaAt: null, codons: null };
+    const tr = p.translation || {}; S.trans = { on: !!tr.on, frame: tr.frame || 1, code: tr.code || 1, aaAt: null, codons: null };
     S.ann = p.annotations || []; S.ovr = p.overrides || {}; S.sel = -1; S.selLoc = null; S.range = null; S.aln = null; S.info = null;
     $('projName').value = p.name || baseName(file.name).replace(/\.dpk$/i, '');
     syncSettingsUI(); S.dirty = false;
