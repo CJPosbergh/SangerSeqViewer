@@ -119,6 +119,7 @@ details.trim summary{cursor:pointer;color:var(--muted)}
 .site .aname{grid-column:2 / span 2;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .kind{font-size:11px;padding:0 6px;border-radius:9px;border:1px solid var(--rule);color:var(--muted);align-self:start}
 .kind.het{background:var(--het-bg);border-color:#EDC66A;color:#6B4A00}
+.kind.snp{background:#E8EEFA;border-color:#BACCE9;color:#17396F}
 .kind.indel{background:var(--ink);border-color:var(--ink);color:#fff}
 .st-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:0}
 .st-candidate{background:var(--het)} .st-confirmed{background:var(--ok)} .st-artifact{background:#9AA6A0}
@@ -298,9 +299,9 @@ dialog#seqDlg::backdrop{background:rgba(22,32,27,.45)}
         </select></label>
       <label>Genetic code
         <select id="transCode">
-          <option value="1" selected>Standard</option>
-          <option value="2" >Vertebrate mitochondrial</option>
-          <option value="5" >Invertebrate mitochondrial</option>
+          <option value="1">Standard</option>
+          <option value="2" selected>Vertebrate mitochondrial</option>
+          <option value="5">Invertebrate mitochondrial</option>
         </select></label>
       <button class="xbtn" id="transHere">Start frame at selected column</button>
       <span class="hint">Amino acids come from the consensus. Sites that change the protein are underlined in the track.</span>
@@ -731,7 +732,7 @@ const MIN_LEN = 50;
 const S = {
   traces: [], settings: { ratio: 0.33, trim: 0.05, minQ: 20 },
   view: { zoom: 3, dots: false, filter: 'all' },
-  trans: { on: false, frame: 1, code: 1, aaAt: null, codons: null },
+  trans: { on: false, frame: 1, code: 2, aaAt: null, codons: null },
   aln: null, info: null, sel: -1,
   ann: [], ovr: {}, dirty: false, run: 0, nextId: 1,
 };
@@ -839,23 +840,23 @@ async function runPipeline(level) {
 function analyze() {
   const A = S.aln; if (!A) { S.info = null; return; }
   const cols = A.cols, T = A.traces;
-  const cons = new Array(cols), counts = new Array(cols), variable = new Uint8Array(cols), kind = new Array(cols), cov = new Int32Array(cols);
+  const cons = new Array(cols), counts = new Array(cols), variable = new Uint8Array(cols), kind = new Array(cols), cov = new Int32Array(cols), het = new Int32Array(cols), nAll = new Int32Array(cols);
   for (let c = 0; c < cols; c++) {
-    const all = new Map(), conf = new Set(); let gaps = 0, n = 0, nonGap = 0;
+    const all = new Map(), conf = new Set(); let gaps = 0, n = 0, nonGap = 0, hets = 0;
     for (const t of T) {
       const v = t.rowAt[c]; if (v === -2) continue; n++;
       if (v === -1) { gaps++; conf.add('-'); all.set('-', (all.get('-') || 0) + 1); continue; }
       const code = effCode(t, v); all.set(code, (all.get(code) || 0) + 1);
       if (code !== 'N') nonGap++;
-      if (code !== 'N' && isConf(t, v)) conf.add(code);
+      if (code !== 'N' && isConf(t, v)) { conf.add(code); if (isHet(code)) hets++; }
     }
-    cov[c] = n; counts[c] = all;
+    cov[c] = n; counts[c] = all; het[c] = hets; nAll[c] = conf.size;
     let best = 'N', bc = -1;
     for (const [k, v] of all) { if (k === '-' || k === 'N') continue; if (v > bc || (v === bc && !isHet(k) && isHet(best))) { best = k; bc = v; } }
     cons[c] = n === 0 ? ' ' : (gaps > Math.max(bc, 0) || bc < 0) ? (gaps ? '-' : 'N') : best;
     if (conf.size > 1 || [...conf].some(isHet)) {
       variable[c] = 1;
-      kind[c] = conf.has('-') ? 'indel' : [...conf].some(isHet) ? 'het' : 'snp';
+      kind[c] = conf.has('-') ? 'indel' : 'snp';
     }
   }
   const pos = new Array(cols); let p = 0, ins = 0;
@@ -882,7 +883,7 @@ function analyze() {
     });
     t.identity = best;
   });
-  S.info = { cons, counts, variable, kind, cov, pos, sites, annAt };
+  S.info = { cons, counts, variable, kind, cov, het, nAll, pos, sites, annAt };
   buildTranslation();
 }
 
@@ -1059,7 +1060,7 @@ function paintAln() {
     if (!p.includes('+') && (+p % step === 0 || +p === 1)) { g.fillStyle = COL.muted; g.textAlign = 'left'; g.fillText(p, x + 1, 11); g.fillRect(x, 12, 1, 4); }
     const a = I.annAt.get(c);
     if (I.variable[c] || a) {
-      g.fillStyle = I.kind[c] === 'indel' ? COL.ink : I.kind[c] === 'het' ? COL.het : I.kind[c] === 'snp' ? COL.T : COL.muted;
+      g.fillStyle = I.kind[c] === 'indel' ? COL.ink : I.kind[c] === 'snp' ? (I.het[c] ? COL.het : COL.T) : COL.muted;
       g.fillRect(x, RULER_H - 5, Math.max(cw, 2), 4);
       if (a) { g.fillStyle = a.status === 'confirmed' ? COL.A : a.status === 'artifact' ? COL.muted : COL.het; g.beginPath(); g.arc(x + cw / 2, RULER_H - 10, 3, 0, 7); g.fill(); }
     }
@@ -1124,7 +1125,7 @@ function paintOverview() {
   for (let x = 0; x < W; x++) { const c = Math.min(cols - 1, Math.floor(x / W * cols)); const h = (I.cov[c] / maxCov) * (H - 12); g.fillRect(x, H - h, 1, h); }
   for (const c of I.sites) {
     const x = Math.floor(c / cols * W), a = I.annAt.get(c);
-    g.fillStyle = I.kind[c] === 'indel' ? COL.ink : I.kind[c] === 'het' ? COL.het : I.kind[c] === 'snp' ? COL.T : COL.muted;
+    g.fillStyle = I.kind[c] === 'indel' ? COL.ink : I.kind[c] === 'snp' ? (I.het[c] ? COL.het : COL.T) : COL.muted;
     g.fillRect(x, a ? 0 : 6, 2, a ? H : H - 6);
   }
   const cw = cellW(), vw = sc.clientWidth - LABEL_W;
@@ -1222,7 +1223,7 @@ function visibleSites() {
   const I = S.info; if (!I) return [];
   const f = S.view.filter;
   return I.sites.filter((c) => {
-    if (f === 'het') return I.kind[c] === 'het';
+    if (f === 'het') return I.het[c] > 0;
     if (f === 'indel') return I.kind[c] === 'indel';
     if (f === 'ann') return I.annAt.has(c);
     if (f === 'aa') { const e = I.variable[c] ? effectLabel(c) : null; return !!(e && e.cls); }
@@ -1316,7 +1317,8 @@ function renderSites() {
     return `<button class="site" data-c="${c}" ${c === S.sel ? 'aria-current="true"' : ''}>
       <span class="pos">${esc(I.pos[c])}</span>
       <span class="calls">${esc(summarizeCounts(c))}</span>
-      <span class="kind ${k || ''}">${k === 'indel' ? 'gap' : k === 'het' ? 'double peak' : k === 'snp' ? 'SNP' : 'no variation'}</span>
+      <span class="kind ${k || ''}">${k === 'indel' ? 'gap' : k === 'snp' ? 'SNP' : 'no variation'}</span>
+      ${I.het[c] ? `<span class="kind het">${I.het[c]} het</span>` : ''}
       ${(() => { const e = I.variable[c] ? effectLabel(c) : null; return e ? `<span class="kind ${e.cls}">${esc(e.txt)}</span>` : ''; })()}
       ${a ? `<span class="aname"><span class="st-dot st-${a.status}"></span>${esc(a.name || 'Unnamed')}${a.kid ? ' (' + esc(a.kid) + ')' : ''}</span>` : ''}
     </button>`;
@@ -1343,7 +1345,12 @@ function renderInspector() {
   const rank = (t) => { const v = t.rowAt[c]; if (v === -1) return 1; const k = effCode(t, v); return isHet(k) ? 0 : k !== consK ? 1 : 2; };
   cov.sort((x, y) => rank(x) - rank(y));
   const chips = [...I.counts[c].entries()].sort((x, y) => y[1] - x[1]).map(([k, v]) => `<span class="chip"><b style="color:${isHet(k) || k === '-' ? COL.ink : baseColor(k)}">${esc(k === '-' ? 'gap' : k)}</b> ${v}${isHet(k) ? ' <span class="hint">' + DP.ALLELES[k] + '</span>' : ''}</span>`).join('');
-  const kindTxt = I.kind[c] === 'indel' ? 'Gap in some traces.' : I.kind[c] === 'het' ? 'Double peaks present.' : I.kind[c] === 'snp' ? 'Single-peak calls differ.' : 'No confident variation here.';
+  const nHet = I.het[c];
+  const hetTxt = nHet ? ` ${nHet} trace${nHet === 1 ? '' : 's'} show${nHet === 1 ? 's' : ''} a double peak here.` : '';
+  const kindTxt = (I.kind[c] === 'indel' ? 'A gap is present in some traces.'
+    : I.kind[c] !== 'snp' ? 'No confident variation here.'
+    : I.nAll[c] > 1 ? 'A substitution: confident calls differ between traces.'
+    : 'A substitution: every covering trace carries the same double peak, so no homozygote is present to confirm it.') + hetTxt;
   let html = `<div class="ins-top">
     <div><h2>Position ${esc(I.pos[c])}</h2><p>Column ${c + 1} of ${S.aln.cols}. ${cov.length} of ${S.aln.traces.length} traces cover this site. ${kindTxt}</p></div>
     <div class="ins-nav"><button class="btn" data-nav="-1" title="Previous variant site ( [ )">Previous site</button><button class="btn" data-nav="1" title="Next variant site ( ] )">Next site</button><button class="btn" data-act="fig">Export figure</button></div>
@@ -1588,7 +1595,7 @@ async function openProject(file) {
       traces.push({ id: r.id, fileName: r.fileName, name: r.name, sample: r.sample, include: r.include !== false, orient: r.orient || 'auto', manualTrim: r.manualTrim || null, bytes, raw });
     }
     S.traces = traces; S.settings = Object.assign({ ratio: 0.33, trim: 0.05, minQ: 20 }, p.settings);
-    const tr = p.translation || {}; S.trans = { on: !!tr.on, frame: tr.frame || 1, code: tr.code || 1, aaAt: null, codons: null };
+    const tr = p.translation || {}; S.trans = { on: !!tr.on, frame: tr.frame || 1, code: tr.code || 2, aaAt: null, codons: null };
     S.ann = p.annotations || []; S.ovr = p.overrides || {}; S.sel = -1; S.selLoc = null; S.range = null; S.aln = null; S.info = null;
     $('projName').value = p.name || baseName(file.name).replace(/\.dpk$/i, '');
     syncSettingsUI(); S.dirty = false;
@@ -1630,7 +1637,7 @@ function doExport(kind) {
     const cols = kind === 'annotated' ? I.sites.filter((c) => I.annAt.has(c)) : I.sites.filter((c) => I.variable[c] || I.annAt.has(c));
     if (!cols.length) { toast(kind === 'annotated' ? 'No annotated sites to export yet.' : 'No variable sites to export.', true); return; }
     const tOn = S.trans.on && S.trans.aaAt;
-    const head = ['column', 'position', 'consensus', 'site_type', ...(tOn ? ['codon', 'codon_position', 'consensus_codon', 'consensus_aa', 'aa_alleles', 'effect'] : []), 'name', 'known_id', 'annotation_type', 'status', 'notes', 'traces_covering', 'sample_conflicts', ...samples];
+    const head = ['column', 'position', 'consensus', 'site_type', ...(tOn ? ['codon', 'codon_position', 'consensus_codon', 'consensus_aa', 'aa_alleles', 'effect'] : []), 'heterozygous_traces', 'distinct_alleles', 'name', 'known_id', 'annotation_type', 'status', 'notes', 'traces_covering', 'sample_conflicts', ...samples];
     const rows = [head];
     for (const c of cols) {
       const a = I.annAt.get(c) || {}; let conflicts = 0;
@@ -1640,7 +1647,7 @@ function doExport(kind) {
         tc = !e ? ['', '', '', '', '', 'outside reading frame']
           : e.insertion ? ['', '', '', '', '', 'insertion relative to consensus']
           : [e.cd.ci + 1, e.k + 1, e.cd.bases.join(''), e.cd.aa, e.aas.join('/'), e.stop ? 'stop gained' : e.changes ? 'changes amino acid' : 'silent']; }
-      rows.push([c + 1, I.pos[c], I.cons[c], I.kind[c] || '', ...tc, a.name || '', a.kid || '', a.type || '', a.status || '', a.notes || '', I.cov[c], conflicts, ...gts]);
+      rows.push([c + 1, I.pos[c], I.cons[c], I.kind[c] || '', ...tc, I.het[c], I.nAll[c], a.name || '', a.kid || '', a.type || '', a.status || '', a.notes || '', I.cov[c], conflicts, ...gts]);
     }
     const unplaced = S.ann.filter((a) => a.col < 0);
     download(base + (kind === 'annotated' ? '_annotated_sites.csv' : '_variable_sites.csv'), csv(rows), 'text/csv');
