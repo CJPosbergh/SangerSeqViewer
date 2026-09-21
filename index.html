@@ -11,7 +11,7 @@
 :root{
   --bench:#E6EBE8; --panel:#FBFCFB; --sunk:#F1F4F2; --ink:#16201B; --muted:#56635C; --rule:#C7D0CB; --rule-soft:#DCE2DE;
   --A:#15904A; --C:#1E5DC2; --G:#16201B; --T:#CF332B; --het:#E3A016; --het-bg:#FBE6B0;
-  --ok:#15904A; --warn:#B86E00; --sel:#1E5DC2;
+  --ok:#15904A; --warn:#B86E00; --sel:#1E5DC2; --ref:#0E7C86;
   --ui:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
   color-scheme: light;
@@ -76,6 +76,34 @@ main{display:grid;grid-template-columns:330px minmax(0,1fr);grid-template-rows:m
 .tsample{width:100%;border:1px solid var(--rule-soft);background:#fff;border-radius:4px;padding:2px 6px;font-size:12px}
 .tstats{font-size:12px;color:var(--muted)}
 .tflag{grid-column:2 / span 2;font-size:12px;color:var(--warn);background:#FFF4DF;border-radius:4px;padding:4px 7px}
+.ttag{font-size:11px;font-weight:400;color:var(--ref);border:1px solid #9FD3D6;background:#E6F4F5;border-radius:9px;padding:0 6px;margin-left:4px;vertical-align:1px}
+.refsec{border-bottom:1px solid var(--rule)}
+.refbox{padding:2px 14px 12px;display:grid;gap:6px}
+.refbox p{margin:0}
+.refname{font-weight:700;color:var(--ref);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.refbox .hint{font-size:12px}
+.refstart{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px}
+.refstart input{width:110px;border:1px solid var(--rule);border-radius:4px;padding:1px 5px;background:#fff}
+.refbox .tog{font-size:12px}
+.refbtns{display:flex;gap:10px;align-items:center}
+.refk{display:inline-block;min-width:14px;text-align:center;font-weight:700;color:var(--ref);border:1px solid #9FD3D6;background:#E6F4F5;border-radius:3px;margin-right:6px;padding:0 2px}
+.chip.refchip{background:#E6F4F5;border-color:#9FD3D6;color:#0B5157;font-family:var(--ui)}
+.kind.fixed{background:#DDF1F2;border-color:#9FD3D6;color:#0B5157}
+.nochromo{display:flex;align-items:center;height:92px;padding:0 14px;color:var(--muted);font-size:12px;background:var(--sunk);border-radius:5px}
+dialog#refDlg{width:min(760px,94vw);max-height:90vh;padding:0;border:1px solid var(--rule);border-radius:8px;color:var(--ink);background:var(--panel);box-shadow:0 20px 60px rgba(10,20,15,.3)}
+dialog#refDlg::backdrop{background:rgba(22,32,27,.45)}
+.ref-body{padding:12px 16px;display:grid;gap:10px}
+.ref-body p{margin:0}
+.ref-row{display:flex;gap:10px;align-items:center}
+.ref-rec{display:flex;gap:8px;align-items:center;font-size:13px}
+.ref-rec select{flex:1;min-width:0;border:1px solid var(--rule);border-radius:4px;background:#fff;padding:2px 4px}
+#refText{width:100%;min-height:220px;resize:vertical;font:500 12px/1.5 var(--mono);border:1px solid var(--rule);border-radius:5px;padding:8px 10px;background:#fff;color:var(--ink)}
+.ref-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.ref-grid label{display:grid;gap:3px;font-size:12px;color:var(--muted)}
+.ref-grid input{border:1px solid var(--rule);border-radius:4px;padding:4px 7px;background:#fff;color:var(--ink);font-size:13px}
+.ref-foot{padding:10px 16px 14px;border-top:1px solid var(--rule-soft)}
+@media (max-width:640px){.ref-grid{grid-template-columns:1fr}}
+.tdel{grid-column:2 / span 2;font-size:12px;color:var(--muted);background:var(--sunk);border-radius:4px;padding:4px 7px;display:flex;gap:8px;align-items:center;justify-content:space-between}
 .tside{display:flex;flex-direction:column;gap:5px;align-items:flex-end}
 .tside select{font-size:12px;padding:1px 2px;border:1px solid var(--rule);border-radius:4px;background:#fff}
 .xbtn{border:0;background:none;color:var(--muted);cursor:pointer;font-size:12px;padding:0 2px;text-decoration:underline}
@@ -116,6 +144,7 @@ details.trim summary{cursor:pointer;color:var(--muted)}
 .site[aria-current=true]{background:#E3EAF7;box-shadow:inset 3px 0 0 var(--sel)}
 .site .pos{font-family:var(--mono);font-weight:700;font-size:12px}
 .site .calls{font-family:var(--mono);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.site .tags{grid-column:2 / span 2;display:flex;flex-wrap:wrap;gap:4px}
 .site .aname{grid-column:2 / span 2;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .kind{font-size:11px;padding:0 6px;border-radius:9px;border:1px solid var(--rule);color:var(--muted);align-self:start}
 .kind.het{background:var(--het-bg);border-color:#EDC66A;color:#6B4A00}
@@ -237,8 +266,8 @@ dialog#seqDlg::backdrop{background:rgba(22,32,27,.45)}
   <input id="projName" value="Untitled project" aria-label="Project name" spellcheck="false">
   <span id="status" role="status" aria-live="polite"></span>
   <div class="actions">
-    <button class="btn primary" id="btnAdd">Add traces</button>
-    <input type="file" id="fileAb1" multiple accept=".ab1,.abi,.ab!" hidden>
+    <button class="btn primary" id="btnAdd" title="Add .ab1 traces, or FASTA and text sequences as extra samples">Add traces</button>
+    <input type="file" id="fileAb1" multiple accept=".ab1,.abi,.ab!,.fasta,.fa,.fas,.fna,.ffn,.fsa,.seq,.txt,.gb,.gbk" hidden>
     <button class="btn" id="btnOpen">Open project</button>
     <input type="file" id="fileProj" accept=".gz,.json,.dpk" hidden>
     <button class="btn" id="btnSave" disabled>Save project</button>
@@ -246,7 +275,7 @@ dialog#seqDlg::backdrop{background:rgba(22,32,27,.45)}
       <button class="btn" id="btnExport" aria-haspopup="true" aria-expanded="false" disabled>Export</button>
       <div class="menu-pop" id="exportMenu" hidden role="menu">
         <button role="menuitem" data-x="annotated">Annotated sites (CSV)<small>One row per annotated site, genotypes by sample</small></button>
-        <button role="menuitem" data-x="variable">All variable sites (CSV)<small>Every site where confident calls differ</small></button>
+        <button role="menuitem" data-x="variable">All variable sites (CSV)<small>Every site where confident calls differ, or differ from the reference</small></button>
         <button role="menuitem" data-x="long">Calls by trace (CSV)<small>Long format with peak ratio and quality</small></button>
         <button role="menuitem" data-x="figure">Figure of this site (PNG or SVG)<small>Stacked chromatograms at the selected site</small></button>
         <button role="menuitem" data-x="seqtext">Copy sequences<small>Pick traces and a range, then copy or save as text</small></button>
@@ -261,7 +290,7 @@ dialog#seqDlg::backdrop{background:rgba(22,32,27,.45)}
     <section class="settings" aria-label="Calling settings">
       <div class="field">
         <label for="setRatio"><span>Double-peak threshold</span><output id="outRatio">0.33</output></label>
-        <input type="range" id="setRatio" min="0.10" max="0.90" step="0.01" value="0.50">
+        <input type="range" id="setRatio" min="0.10" max="0.60" step="0.01" value="0.33">
         <p>Second peak height as a fraction of the first. At or above this, the base is called heterozygous.</p>
       </div>
       <div class="field">
@@ -274,6 +303,10 @@ dialog#seqDlg::backdrop{background:rgba(22,32,27,.45)}
         <input type="range" id="setQ" min="0" max="40" step="1" value="20">
         <p>Single-peak calls below this Phred score don't create variant sites. Double peaks always count, since their quality scores run low.</p>
       </div>
+    </section>
+    <section class="refsec" aria-label="Reference">
+      <div class="phead"><h2>Reference</h2></div>
+      <div class="refbox" id="refBox"></div>
     </section>
     <div class="phead"><h2 id="traceHead">Traces</h2></div>
     <div class="scroll"><div class="tlist" id="tlist"><p class="empty-side">No traces yet.</p></div></div>
@@ -314,6 +347,7 @@ dialog#seqDlg::backdrop{background:rgba(22,32,27,.45)}
         <div>
           <h2>Add Sanger traces to start</h2>
           <p>Drop .ab1 files anywhere on the page. Reads from the same amplicon are aligned to each other, reverse reads are flipped automatically, and double peaks are called as heterozygous sites.</p>
+          <p>FASTA or text sequences can be added the same way as extra samples. To align everything to a known sequence, add a reference in the sidebar.</p>
           <button class="btn" id="btnAdd2">Add traces</button>
         </div>
       </div>
@@ -325,9 +359,10 @@ dialog#seqDlg::backdrop{background:rgba(22,32,27,.45)}
       <div class="phead">
         <h2 id="siteHead">Variant sites</h2>
         <select id="siteFilter" aria-label="Filter sites">
-          <option value="all">All variable</option>
+          <option value="all">All sites</option>
           <option value="het">With double peaks</option>
           <option value="indel">Gaps</option>
+          <option value="fixed">Differ from reference</option>
           <option value="aa">Changes the protein</option>
         <option value="ann">Annotated</option>
         </select>
@@ -348,6 +383,22 @@ dialog#seqDlg::backdrop{background:rgba(22,32,27,.45)}
 
 <div class="drop" id="drop" hidden><span>Drop .ab1 files to add them</span></div>
 <div class="toast" id="toast" hidden role="alert"></div>
+
+<dialog id="refDlg" aria-labelledby="refTitle">
+  <div class="dlg-head"><h2 id="refTitle">Reference sequence</h2><button class="xbtn" id="refClose">Close</button></div>
+  <div class="ref-body">
+    <p class="hint">Paste a FASTA record or a plain sequence, or choose a file (.fasta, .txt, GenBank). Spaces, line numbers and gaps are ignored. Your traces are aligned to this sequence and positions follow its coordinates.</p>
+    <div class="ref-row"><button class="btn" id="refFileBtn" type="button">Choose file</button><input type="file" id="refFile" hidden accept=".fasta,.fa,.fas,.fna,.ffn,.fsa,.seq,.txt,.gb,.gbk"><span id="refFileName" class="hint"></span></div>
+    <label class="ref-rec" id="refRecWrap" hidden>This file has several records. Use <select id="refRec"></select></label>
+    <textarea id="refText" spellcheck="false" placeholder="&gt;OAR_PRNP_exon3&#10;ATGGTGAAAAGCCACATAGGCAGTTGGATCCTGGTTCTCTTTGTGGCCATGTGGAGTGACGTGGGCCTCTGCAAGAAGCGACCAAAACCTGGCGGAGGATGG"></textarea>
+    <div class="ref-grid">
+      <label>Name <input id="refName" type="text" placeholder="e.g. PRNP exon 3"></label>
+      <label>Genome position of the first base <input id="refStart" type="number" step="1" value="1"></label>
+    </div>
+    <p id="refInfo" class="hint" role="status"></p>
+  </div>
+  <div class="dlg-foot ref-foot"><span></span><button class="btn" id="refCancel" type="button">Cancel</button><button class="btn dark" id="refUse" type="button">Use as reference</button></div>
+</dialog>
 
 <dialog id="figDlg" aria-labelledby="fgTitleH">
   <div class="dlg-head"><h2 id="fgTitleH">Figure of this site</h2><button class="xbtn" id="fgClose">Close</button></div>
@@ -519,10 +570,11 @@ const DP = (() => {
   }
 
   /* ---------- oriented sequence for alignment ---------- */
-  function orientedSeq(calls, trim, reverse) {
+  function orientedSeq(calls, trim, reverse, skip) {
     const idx = [], codes = [];
-    if (!reverse) for (let i = trim.s; i < trim.e; i++) { idx.push(i); codes.push(calls[i].code); }
-    else for (let i = trim.e - 1; i >= trim.s; i--) { idx.push(i); codes.push(COMP[calls[i].code]); }
+    const drop = (i) => skip && skip.has(i);
+    if (!reverse) for (let i = trim.s; i < trim.e; i++) { if (drop(i)) continue; idx.push(i); codes.push(calls[i].code); }
+    else for (let i = trim.e - 1; i >= trim.s; i--) { if (drop(i)) continue; idx.push(i); codes.push(COMP[calls[i].code]); }
     const masks = new Uint8Array(codes.length);
     for (let k = 0; k < codes.length; k++) masks[k] = MASK[codes[k]] || 15;
     return { idx: Int32Array.from(idx), masks, codes };
@@ -712,9 +764,93 @@ const DP = (() => {
     return { aa: arr.length === 1 ? arr[0] : 'X', set: arr };
   }
 
+
+  /* ---------- sequence text (FASTA, GenBank, plain) ---------- */
+  const IUPAC_OK = new Set('ACGTNRYSWKMBDHV'.split(''));
+  function cleanSeq(raw) {
+    const s = String(raw).toUpperCase().replace(/[\s\d\-.*~]/g, '').replace(/U/g, 'T');
+    const out = new Array(s.length); let bad = 0; const badSet = new Set();
+    for (let i = 0; i < s.length; i++) { const ch = s[i]; if (IUPAC_OK.has(ch)) out[i] = ch; else { bad++; out[i] = 'N'; if (badSet.size < 6) badSet.add(ch); } }
+    return { seq: out.join(''), bad, badChars: [...badSet], total: s.length };
+  }
+  function nonIupacShare(line) {
+    const letters = line.replace(/[^A-Za-z]/g, ''); if (!letters.length) return 0;
+    let b = 0; for (const ch of letters.toUpperCase()) if (!IUPAC_OK.has(ch) && ch !== 'U') b++;
+    return b / letters.length;
+  }
+  function parseSeqText(text) {
+    text = String(text).replace(/^﻿/, '').replace(/\r\n?/g, '\n');
+    const recs = [];
+    if (/^LOCUS\s/m.test(text) && /^ORIGIN/m.test(text)) {
+      for (const e of text.split(/^\/\/[^\n]*$/m)) {
+        const o = e.search(/^ORIGIN/m); if (o < 0) continue;
+        const loc = /^LOCUS\s+(\S+)/m.exec(e), def = /^DEFINITION\s+([^\n]+)/m.exec(e);
+        recs.push(Object.assign({ name: loc ? loc[1] : '', desc: def ? def[1].trim() : '' }, cleanSeq(e.slice(o).replace(/^ORIGIN[^\n]*\n?/, ''))));
+      }
+      return { format: 'genbank', records: recs };
+    }
+    if (/^\s*>/.test(text)) {
+      for (const b of text.replace(/^\s+/, '').split(/\n(?=>)/)) {
+        const nl = b.indexOf('\n');
+        const head = (nl < 0 ? b : b.slice(0, nl)).slice(1).trim(), body = nl < 0 ? '' : b.slice(nl + 1);
+        const sp = head.search(/\s/);
+        recs.push(Object.assign({ name: sp < 0 ? head : head.slice(0, sp), desc: sp < 0 ? '' : head.slice(sp + 1).trim() }, cleanSeq(body)));
+      }
+      return { format: 'fasta', records: recs };
+    }
+    // plain text: a first line that is mostly non-nucleotide letters is taken as a title
+    const lines = text.split('\n'); let i = 0; while (i < lines.length && !lines[i].trim()) i++;
+    let name = '';
+    if (i < lines.length - 1 && nonIupacShare(lines[i]) > 0.15) { name = lines[i].trim(); i++; }
+    return { format: 'plain', records: [Object.assign({ name, desc: '' }, cleanSeq(lines.slice(i).join('\n')))] };
+  }
+
+  /* ---------- k-mer orientation check (long references) ---------- */
+  const B2 = new Int8Array(16).fill(-1); B2[1] = 0; B2[2] = 1; B2[4] = 2; B2[8] = 3;
+  function eachKmer(masks, fn) {
+    const K = 11, KM = (1 << 22) - 1; let h = 0, len = 0;
+    for (let i = 0; i < masks.length; i++) { const b = B2[masks[i]]; if (b < 0) { len = 0; h = 0; continue; } h = ((h << 2) | b) & KM; len++; if (len >= K) fn(h); }
+  }
+  function kmerIndex(masks) { const s = new Set(); eachKmer(masks, (h) => s.add(h)); return s; }
+  function kmerHits(idx, masks) { let n = 0; eachKmer(masks, (h) => { if (idx.has(h)) n++; }); return n; }
+
+  /* Reference-anchored alignment. Every read is aligned to the reference in its better
+     orientation; the reference is row 0 of the merge. crop keeps only the columns that
+     at least one read covers. */
+  async function alignToRef(refMasks, items, onProgress, opts = {}) {
+    const R = items.length, n = refMasks.length;
+    const ai0 = new Array(n), bi0 = new Array(n); for (let k = 0; k < n; k++) { ai0[k] = k; bi0[k] = k; }
+    const paths = [{ ai: ai0, bi: bi0 }], orient = new Array(R), scores = new Array(R);
+    const idx = n > 1500 ? kmerIndex(refMasks) : null;
+    for (let r = 0; r < R; r++) {
+      const it = items[r];
+      let tryF = it.force !== 'R', tryR = it.force !== 'F';
+      if (idx && tryF && tryR) {
+        const hf = kmerHits(idx, it.masks), hr = kmerHits(idx, it.masksRC), hi = Math.max(hf, hr), lo = Math.min(hf, hr);
+        if (hi >= 5 && hi >= 3 * lo) { if (hf > hr) tryR = false; else tryF = false; }
+      }
+      const f = tryF ? align(refMasks, it.masks) : null, rv = tryR ? align(refMasks, it.masksRC) : null;
+      if (f && (!rv || f.score >= rv.score)) { paths.push(f); orient[r] = 'F'; scores[r] = f.score; }
+      else { paths.push(rv); orient[r] = 'R'; scores[r] = rv.score; }
+      if (onProgress) await onProgress((r + 1) / R);
+    }
+    const m = starMerge(n, paths);
+    let rows = m.rows, cols = m.cols;
+    if (opts.crop && rows.length > 1) {
+      let lo = cols, hi = -1;
+      for (let r = 1; r < rows.length; r++) {
+        const row = rows[r];
+        for (let q = 0; q < cols; q++) if (row[q] !== -2) { if (q < lo) lo = q; break; }
+        for (let q = cols - 1; q >= 0; q--) if (row[q] !== -2) { if (q > hi) hi = q; break; }
+      }
+      if (hi >= lo) { rows = rows.map((row) => row.slice(lo, hi + 1)); cols = hi - lo + 1; }
+    }
+    return { cols, refRow: rows[0], rows: rows.slice(1), orient, scores };
+  }
+
   function revComp(code) { return COMP[code] || 'N'; }
 
-  return { MASK, CODE, COMP, HET, ALLELES, BASES, TABLES, AA3, translateCodon, parseAB1, callPeaks, mottTrim, orientedSeq, align, starMerge, consensusMasks, alignAll, revComp, popcount };
+  return { MASK, CODE, COMP, HET, ALLELES, BASES, TABLES, AA3, translateCodon, parseSeqText, cleanSeq, alignToRef, parseAB1, callPeaks, mottTrim, orientedSeq, align, starMerge, consensusMasks, alignAll, revComp, popcount };
 })();
 if (typeof module !== 'undefined') module.exports = DP;
 
@@ -723,19 +859,30 @@ if (typeof module !== 'undefined') module.exports = DP;
 (() => {
 'use strict';
 const $ = (id) => document.getElementById(id);
-const COL = { A:'#15904A', C:'#1E5DC2', G:'#16201B', T:'#CF332B', het:'#E3A016', hetBg:'#FBE6B0', muted:'#8C9993', ink:'#16201B', rule:'#DCE2DE', sel:'#1E5DC2', match:'#CBD3CF', panel:'#FBFCFB', sunk:'#F1F4F2' };
+const COL = { A:'#15904A', C:'#1E5DC2', G:'#16201B', T:'#CF332B', het:'#E3A016', hetBg:'#FBE6B0', muted:'#8C9993', ink:'#16201B', rule:'#DCE2DE', sel:'#1E5DC2', match:'#CBD3CF', panel:'#FBFCFB', sunk:'#F1F4F2', ref:'#0E7C86', refBg:'#D3EDEF' };
 const MONO = '"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace';
 const UIF = '"Atkinson Hyperlegible", system-ui, sans-serif';
 const ZOOMS = [3, 5, 8, 12, 16];
-const MIN_LEN = 50;
+const MIN_LEN = 50, MIN_REF = 20, MAX_REF = 50000;
+const SEQ_EXT = /\.(fasta|fa|fas|fna|ffn|fsa|seq|txt|gb|gbk)$/i;
 
 const S = {
   traces: [], settings: { ratio: 0.33, trim: 0.05, minQ: 20 },
   view: { zoom: 3, dots: false, filter: 'all' },
   trans: { on: false, frame: 1, code: 2, aaAt: null, codons: null },
   aln: null, info: null, sel: -1,
-  ann: [], ovr: {}, dirty: false, run: 0, nextId: 1,
+  ann: [], ovr: {}, dirty: false, run: 0, nextId: 1, ref: null,
 };
+function hashSeq(s) { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36) + s.length.toString(36); }
+function makeRef(name, seq, start, showAll) {
+  const masks = new Uint8Array(seq.length); for (let i = 0; i < seq.length; i++) masks[i] = DP.MASK[seq[i]] || 15;
+  return { name: name || 'reference', seq, start: Number.isFinite(start) ? start : 1, showAll: !!showAll, masks, key: hashSeq(seq) };
+}
+function refDiffers(a, r) {
+  if (a === '-' || r === '-') return a !== r;
+  if (a === 'N' || r === 'N') return false;
+  return !(DP.MASK[a] & DP.MASK[r]);
+}
 
 /* ---------------- utilities ---------------- */
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
@@ -758,16 +905,20 @@ function fromB64(b) { const s = atob(b); const u = new Uint8Array(s.length); for
 /* ---------------- per-trace processing ---------------- */
 function processTrace(t) {
   const raw = t.raw, n = raw.bases.length;
-  t.calls = DP.callPeaks(raw, S.settings.ratio);
+  t.calls = t.kind === 'seq' ? Array.from(raw.bases, (code) => ({ code, ratio: 0, q: -1 })) : DP.callPeaks(raw, S.settings.ratio);
   const auto = DP.mottTrim(raw.qual, n, S.settings.trim);
   t.autoTrim = auto;
   t.trim = t.manualTrim ? { s: Math.max(0, Math.min(n, t.manualTrim.s)), e: Math.max(0, Math.min(n, t.manualTrim.e)) } : auto;
   if (t.trim.e < t.trim.s) t.trim.e = t.trim.s;
-  t.seqF = DP.orientedSeq(t.calls, t.trim, false);
-  t.seqR = DP.orientedSeq(t.calls, t.trim, true);
+  const ov = S.ovr[t.id]; let skip = null;
+  if (ov) for (const k in ov) if (ov[k] === 'del') (skip || (skip = new Set())).add(+k);
+  t.delCount = skip ? skip.size : 0;
+  t.seqF = DP.orientedSeq(t.calls, t.trim, false, skip);
+  t.seqR = DP.orientedSeq(t.calls, t.trim, true, skip);
   t.flags = [];
-  const len = t.trim.e - t.trim.s;
-  if (len < MIN_LEN) t.flags.push('Too little high-quality sequence to align (' + len + ' bases after trimming). Try a looser end-trimming setting, or set the trim range by hand.');
+  const len = t.seqF.masks.length;
+  if (len < MIN_LEN) t.flags.push(t.kind === 'seq' ? 'This sequence is only ' + len + ' bases, too short to align (at least ' + MIN_LEN + ' needed).' : 'Too little high-quality sequence to align (' + len + ' bases after trimming). Try a looser end-trimming setting, or set the trim range by hand.');
+  if (t.kind === 'seq') return;
   // sustained double peaks (40%+ of bases over 60 bp) after the read start: heterozygous indel or mixed template
   const P = new Int32Array(n + 1);
   for (let i = 0; i < n; i++) P[i + 1] = P[i] + (isHet(t.calls[i].code) ? 1 : 0);
@@ -780,11 +931,13 @@ function processTrace(t) {
   }
 }
 
+function isDel(t, raw) { const o = S.ovr[t.id]; return !!(o && o[raw] === 'del'); }
 function effCode(t, raw) {
-  const o = S.ovr[t.id]; const c = (o && o[raw] != null) ? o[raw] : t.calls[raw].code;
+  const o = S.ovr[t.id]; const v = o ? o[raw] : null;
+  const c = (v != null && v !== 'del') ? v : t.calls[raw].code;
   return t.orientUsed === 'R' ? DP.COMP[c] : c;
 }
-function isOvr(t, raw) { const o = S.ovr[t.id]; return !!(o && o[raw] != null); }
+function isOvr(t, raw) { const o = S.ovr[t.id]; return !!(o && o[raw] != null && o[raw] !== 'del'); }
 function isConf(t, raw) {
   if (isOvr(t, raw)) return true;
   const c = t.calls[raw]; if (c.code === 'N') return false;
@@ -805,17 +958,25 @@ async function runPipeline(level) {
   const token = ++S.run;
   if (level >= LV.calls) S.traces.forEach(processTrace);
   if (level >= LV.align) {
-    const use = S.traces.filter((t) => t.include && (t.trim.e - t.trim.s) >= MIN_LEN);
+    const use = S.traces.filter((t) => t.include && t.seqF.masks.length >= MIN_LEN);
     S.traces.forEach((t) => { t.rowAt = null; t.rawToCol = null; t.identity = null; if (!use.includes(t)) t.orientUsed = null; });
     if (!use.length) { S.aln = null; S.info = null; S.sel = -1; renderAll(); setStatus(S.traces.length ? 'No traces are ready to align.' : ''); return; }
-    setStatus('Aligning ' + use.length + ' trace' + (use.length > 1 ? 's' : '') + '…');
+    const ref = S.ref;
+    setStatus('Aligning ' + use.length + ' trace' + (use.length > 1 ? 's' : '') + (ref ? ' to ' + ref.name : '') + '…');
     const items = use.map((t) => ({ masks: t.seqF.masks, masksRC: t.seqR.masks, force: t.orient === 'F' ? 'F' : t.orient === 'R' ? 'R' : null }));
     let lastYield = performance.now();
-    const res = await DP.alignAll(items, async (f) => {
+    const prog = async (f) => {
       setProgress(f);
       if (performance.now() - lastYield > 40) { await sleep0(); lastYield = performance.now(); }
       if (token !== S.run) throw new Error('stale');
-    }).catch((e) => { if (e.message === 'stale') return null; throw e; });
+    };
+    let res;
+    try {
+      res = ref ? await DP.alignToRef(ref.masks, items, prog, { crop: !ref.showAll }) : await DP.alignAll(items, prog);
+    } catch (e) {
+      if (e.message === 'stale') return;
+      setProgress(null); toast('Alignment failed: ' + e.message, true); return;
+    }
     if (!res || token !== S.run) return;
     setProgress(null);
     const cols = res.cols;
@@ -827,7 +988,12 @@ async function runPipeline(level) {
       t.rowAt = rowAt; t.rawToCol = r2c;
     });
     const prevSelLoc = S.selLoc;
-    S.aln = { cols, traces: use };
+    S.aln = { cols, traces: use, ref: null };
+    if (ref) {
+      const rr = res.refRow, r2c = new Int32Array(ref.seq.length).fill(-1);
+      for (let c = 0; c < cols; c++) if (rr[c] >= 0) r2c[rr[c]] = c;
+      S.aln.ref = { rowAt: rr, rawToCol: r2c, key: ref.key };
+    }
     if (prevSelLoc) { const c = resolveLoc(prevSelLoc); S.sel = c; } else S.sel = Math.min(S.sel, cols - 1);
     if (S.range) { const a = resolveLoc(S.range.locA), b = resolveLoc(S.range.locB); S.range = (a >= 0 && b >= 0) ? { a, b, locA: S.range.locA, locB: S.range.locB } : null; }
     updateSpacer();
@@ -839,8 +1005,9 @@ async function runPipeline(level) {
 /* ---------------- analysis ---------------- */
 function analyze() {
   const A = S.aln; if (!A) { S.info = null; return; }
-  const cols = A.cols, T = A.traces;
+  const cols = A.cols, T = A.traces, R = A.ref, refSeq = S.ref ? S.ref.seq : null;
   const cons = new Array(cols), counts = new Array(cols), variable = new Uint8Array(cols), kind = new Array(cols), cov = new Int32Array(cols), het = new Int32Array(cols), nAll = new Int32Array(cols);
+  const refCode = new Array(cols).fill(null), fixed = new Uint8Array(cols);
   for (let c = 0; c < cols; c++) {
     const all = new Map(), conf = new Set(); let gaps = 0, n = 0, nonGap = 0, hets = 0;
     for (const t of T) {
@@ -854,16 +1021,29 @@ function analyze() {
     let best = 'N', bc = -1;
     for (const [k, v] of all) { if (k === '-' || k === 'N') continue; if (v > bc || (v === bc && !isHet(k) && isHet(best))) { best = k; bc = v; } }
     cons[c] = n === 0 ? ' ' : (gaps > Math.max(bc, 0) || bc < 0) ? (gaps ? '-' : 'N') : best;
+    if (R) { const rv = R.rowAt[c]; refCode[c] = rv >= 0 ? refSeq[rv] : rv === -1 ? '-' : null; }
     if (conf.size > 1 || [...conf].some(isHet)) {
       variable[c] = 1;
-      kind[c] = conf.has('-') ? 'indel' : 'snp';
+      kind[c] = (conf.has('-') || refCode[c] === '-') ? 'indel' : 'snp';
+    } else if (refCode[c] != null && conf.size === 1) {
+      const only = [...conf][0];
+      if (refDiffers(only, refCode[c])) { fixed[c] = 1; kind[c] = (only === '-' || refCode[c] === '-') ? 'indel' : 'snp'; }
     }
   }
-  const pos = new Array(cols); let p = 0, ins = 0;
-  for (let c = 0; c < cols; c++) { if (cons[c] !== '-' && cons[c] !== ' ') { p++; ins = 0; pos[c] = String(p); } else { ins++; pos[c] = p + '+' + ins; } }
+  const pos = new Array(cols);
+  if (R) {
+    // reference coordinates; columns that are not reference bases read as insertions after the previous one
+    const st = S.ref.start; let firstRef = -1;
+    for (let c = 0; c < cols; c++) if (R.rowAt[c] >= 0) { firstRef = c; break; }
+    let lastP = firstRef >= 0 ? st + R.rowAt[firstRef] - 1 : st - 1, ins = 0;
+    for (let c = 0; c < cols; c++) { const v = R.rowAt[c]; if (v >= 0) { lastP = st + v; ins = 0; pos[c] = String(lastP); } else { ins++; pos[c] = lastP + '+' + ins; } }
+  } else {
+    let p = 0, ins = 0;
+    for (let c = 0; c < cols; c++) { if (cons[c] !== '-' && cons[c] !== ' ') { p++; ins = 0; pos[c] = String(p); } else { ins++; pos[c] = p + '+' + ins; } }
+  }
   const annAt = new Map();
   S.ann.forEach((a) => { a.col = resolveLoc(a.loc); if (a.col >= 0 && !annAt.has(a.col)) annAt.set(a.col, a); });
-  const sites = []; for (let c = 0; c < cols; c++) if (variable[c] || annAt.has(c)) sites.push(c);
+  const sites = []; for (let c = 0; c < cols; c++) if (variable[c] || fixed[c] || annAt.has(c)) sites.push(c);
   // overlap with other traces, and identity to the closest other trace
   const codesOf = T.map((t) => { const out = new Array(cols); for (let c = 0; c < cols; c++) { const v = t.rowAt[c]; out[c] = v === -2 ? null : v === -1 ? '-' : effCode(t, v); } return out; });
   T.forEach((t, i) => {
@@ -882,8 +1062,20 @@ function analyze() {
       if (tot >= 50) { const idn = m / tot; if (best === null || idn > best) best = idn; }
     });
     t.identity = best;
+    // agreement with the reference
+    if (R) {
+      let tot = 0, m = 0, bases = 0, onRef = 0;
+      for (let c = 0; c < cols; c++) {
+        const v = t.rowAt[c]; if (v < 0) continue;
+        const k = effCode(t, v); if (k === 'N') continue;
+        bases++; const rv = R.rowAt[c]; if (rv < 0) continue;
+        onRef++; const rk = refSeq[rv]; if (rk === 'N') continue;
+        tot++; if (DP.MASK[k] & DP.MASK[rk]) m++;
+      }
+      t.refIdentity = tot ? m / tot : null; t.refCover = bases ? onRef / bases : 0;
+    } else { t.refIdentity = null; t.refCover = null; }
   });
-  S.info = { cons, counts, variable, kind, cov, het, nAll, pos, sites, annAt };
+  S.info = { cons, counts, variable, fixed, refCode, kind, cov, het, nAll, pos, sites, annAt };
   buildTranslation();
 }
 
@@ -891,6 +1083,8 @@ function analyze() {
 function makeLoc(c) {
   const out = [];
   if (!S.aln) return out;
+  const R = S.aln.ref;
+  if (R && R.rowAt[c] >= 0) out.push({ t: '__ref:' + R.key, i: R.rowAt[c] });
   const T = [...S.aln.traces].sort((a, b) => (b.trim.e - b.trim.s) - (a.trim.e - a.trim.s));
   for (const t of T) { const v = t.rowAt[c]; if (v >= 0) out.push({ t: t.id, i: v }); if (out.length >= 8) break; }
   if (!out.length) { // gap-only column: anchor to left neighbour + offset
@@ -901,6 +1095,11 @@ function makeLoc(c) {
 function resolveLoc(loc) {
   if (!S.aln || !loc) return -1;
   for (const L of loc) {
+    if (typeof L.t === 'string' && L.t.startsWith('__ref:')) {
+      const R = S.aln.ref; if (!R || L.t !== '__ref:' + R.key) continue;
+      const c = R.rawToCol[L.i]; if (c >= 0) return c;
+      continue;
+    }
     const t = S.aln.traces.find((x) => x.id === L.t); if (!t || !t.rawToCol) continue;
     const c = t.rawToCol[L.i]; if (c < 0) continue;
     const cc = c + (L.off || 0); if (cc < S.aln.cols) return cc;
@@ -909,18 +1108,44 @@ function resolveLoc(loc) {
 }
 
 /* ---------------- trace loading ---------------- */
+function makeSeqTrace(name, seq, fileName, id) {
+  return { id: id || uid(), kind: 'seq', fileName, name, sample: name, include: true, orient: 'auto', manualTrim: null, bytes: null,
+    raw: { bases: seq, ploc: null, qual: null, data: null, traceLen: 0, sample: '' } };
+}
+/* checks one parsed record; returns an error sentence or null */
+function recordProblem(r) {
+  if (!r.seq.length) return 'no sequence found';
+  if (r.bad / Math.max(1, r.total) > 0.02) return 'contains letters that are not nucleotide codes (' + r.badChars.join(', ') + '), so it looks like protein or plain text';
+  return null;
+}
 async function addFiles(files) {
-  const list = [...files]; let ok = 0; const bad = [];
+  const list = [...files]; let ok = 0, seqs = 0; const bad = [];
   for (const f of list) {
     try {
       const buf = await f.arrayBuffer();
-      const raw = DP.parseAB1(buf);
-      if (raw.qual && !raw.qual.some((q) => q > 0)) raw.qual = null;
-      S.traces.push({ id: uid(), fileName: f.name, name: baseName(f.name), sample: baseName(f.name), include: true, orient: 'auto', manualTrim: null, bytes: new Uint8Array(buf), raw });
-      ok++;
+      const head = new Uint8Array(buf, 0, Math.min(4, buf.byteLength));
+      const isAbif = head.length === 4 && String.fromCharCode(...head) === 'ABIF';
+      if (isAbif || /\.(ab1|abi|ab!)$/i.test(f.name)) {
+        const raw = DP.parseAB1(buf);
+        if (raw.qual && !raw.qual.some((q) => q > 0)) raw.qual = null;
+        S.traces.push({ id: uid(), kind: 'ab1', fileName: f.name, name: baseName(f.name), sample: baseName(f.name), include: true, orient: 'auto', manualTrim: null, bytes: new Uint8Array(buf), raw });
+        ok++; continue;
+      }
+      if (buf.byteLength > 5e6) throw new Error('the file is larger than 5 MB. Extract the region you need first.');
+      const parsed = DP.parseSeqText(new TextDecoder().decode(buf));
+      const stem = f.name.replace(/\.[^.]+$/, '');
+      let added = 0;
+      parsed.records.forEach((r, i) => {
+        const prob = recordProblem(r);
+        if (prob) { bad.push(f.name + (parsed.records.length > 1 ? ' record ' + (r.name || i + 1) : '') + ': ' + prob); return; }
+        const name = r.name || (parsed.records.length > 1 ? stem + '_' + (i + 1) : stem);
+        S.traces.push(makeSeqTrace(name, r.seq, f.name)); added++;
+      });
+      ok += added; seqs += added;
     } catch (e) { bad.push(f.name + ': ' + e.message); }
   }
-  if (bad.length) toast('Skipped ' + bad.length + ' file' + (bad.length > 1 ? 's' : '') + '. ' + bad[0], true);
+  if (bad.length) toast('Skipped ' + bad.length + (bad.length > 1 ? ' items' : ' item') + '. ' + bad[0], true);
+  else if (seqs) toast('Added ' + seqs + ' sequence' + (seqs === 1 ? '' : 's') + ' as sample' + (seqs === 1 ? '' : 's') + '. To use a sequence as the reference instead, choose Add reference in the sidebar.');
   if (ok) { markDirty(); schedule('calls', 0); }
 }
 
@@ -930,18 +1155,24 @@ function renderTraces() {
   $('traceHead').textContent = S.traces.length ? 'Traces (' + S.traces.length + ')' : 'Traces';
   if (!S.traces.length) { el.innerHTML = '<p class="empty-side">No traces yet.</p>'; return; }
   el.innerHTML = S.traces.map((t) => {
-    const len = t.trim ? t.trim.e - t.trim.s : 0;
+    const len = t.seqF ? t.seqF.masks.length : 0;
     const dir = t.orientUsed === 'R' ? 'reverse' : t.orientUsed === 'F' ? 'forward' : 'not aligned';
-    const idt = t.identity != null ? ', closest other read ' + (t.identity * 100).toFixed(t.identity > 0.99 && t.identity < 1 ? 1 : 0) + '% identical' : '';
+    const pct = (x) => (x * 100).toFixed(x > 0.99 && x < 1 ? 1 : 0);
+    const hasRef = !!(S.aln && S.aln.ref);
+    const idt = hasRef && t.refIdentity != null ? ', ' + pct(t.refIdentity) + '% identical to the reference'
+      : t.identity != null ? ', closest other read ' + pct(t.identity) + '% identical' : '';
     const flags = [...(t.flags || [])];
-    if (t.orientUsed && S.aln && S.aln.traces.length > 1) {
+    if (t.orientUsed && hasRef) {
+      if (t.refCover < 0.5) flags.push('Only ' + Math.round(t.refCover * 100) + '% of this ' + (t.kind === 'seq' ? 'sequence' : 'read') + ' falls within the reference. It may come from a different region; check the reference or untick it.');
+      else if (t.refIdentity != null && t.refIdentity < 0.85) flags.push('Only ' + Math.round(t.refIdentity * 100) + '% identical to the reference. Check that the reference and this ' + (t.kind === 'seq' ? 'sequence' : 'read') + ' come from the same region.');
+    } else if (t.orientUsed && S.aln && S.aln.traces.length > 1) {
       if (t.overlap < 0.5) flags.push('Only ' + Math.round(t.overlap * 100) + '% of this read overlaps the other reads. It may come from a different amplicon; untick it to leave it out.');
       else if (t.identity != null && t.identity < 0.9) flags.push('No other read is more than ' + Math.round(t.identity * 100) + '% identical to this one. Check that it comes from the same amplicon.');
     }
     return `<div class="trace${t.include ? '' : ' off'}" data-id="${t.id}">
       <input type="checkbox" data-act="inc" ${t.include ? 'checked' : ''} aria-label="Include ${esc(t.name)} in the alignment">
       <div style="min-width:0;display:grid;gap:3px">
-        <div class="tname" title="${esc(t.fileName)}">${esc(t.name)}</div>
+        <div class="tname" title="${esc(t.fileName)}">${esc(t.name)}${t.kind === 'seq' ? ' <span class="ttag" title="Added from a sequence file. No chromatogram.">sequence</span>' : ''}</div>
         <input class="tsample" data-act="sample" value="${esc(t.sample)}" aria-label="Sample name for ${esc(t.name)}" title="Traces sharing a sample name are merged into one genotype on export">
         <div class="tstats">${t.trim ? `bases ${t.trim.s + 1}–${t.trim.e} (${len} bp), ${dir}${idt}` : ''}</div>
       </div>
@@ -954,6 +1185,7 @@ function renderTraces() {
         <button class="xbtn" data-act="rm">Remove</button>
       </div>
       ${flags.map((f) => `<div class="tflag">${esc(f)}</div>`).join('')}
+      ${t.delCount ? `<div class="tdel">${t.delCount} base${t.delCount === 1 ? '' : 's'} removed by hand <button class="xbtn" data-act="undel">Restore all</button></div>` : ''}
       <details class="trim"${t.manualTrim ? ' open' : ''}><summary>Trim range${t.manualTrim ? ' (set by hand)' : ''}</summary>
         <div class="trimrow"><label>From <input type="number" data-act="ts" min="1" max="${t.raw.bases.length}" value="${t.trim ? t.trim.s + 1 : 1}"></label>
         <label>to <input type="number" data-act="te" min="1" max="${t.raw.bases.length}" value="${t.trim ? t.trim.e : t.raw.bases.length}"></label>
@@ -977,16 +1209,23 @@ $('tlist').addEventListener('change', (e) => {
   }
 });
 $('tlist').addEventListener('click', (e) => {
-  const act = e.target.dataset.act; if (act !== 'rm' && act !== 'tauto') return;
+  const act = e.target.dataset.act; if (act !== 'rm' && act !== 'tauto' && act !== 'undel') return;
   const row = e.target.closest('.trace'); const t = S.traces.find((x) => x.id === row.dataset.id); if (!t) return;
   if (act === 'rm') { S.traces = S.traces.filter((x) => x !== t); delete S.ovr[t.id]; markDirty(); schedule('align', 0); }
+  else if (act === 'undel') { const o = S.ovr[t.id] || {}; for (const k in o) if (o[k] === 'del') delete o[k]; markDirty(); schedule('calls', 0); }
   else { t.manualTrim = null; markDirty(); schedule('calls', 0); }
 });
 
 /* ---------------- rendering: alignment canvas ---------------- */
 const cv = $('aln'), sc = $('alnScroll'), spacer = $('alnSpacer'), ovw = $('ovw');
-let LABEL_W = 190; const RULER_H = 22, CONS_H = 22, AA_H = 20;
-const headH = () => RULER_H + CONS_H + (S.trans.on && S.trans.aaAt ? AA_H : 0);
+let LABEL_W = 190; const RULER_H = 22, REF_H = 22, CONS_H = 22, AA_H = 20;
+const refH = () => (S.aln && S.aln.ref ? REF_H : 0);
+const consTop = () => RULER_H + refH();
+const headH = () => consTop() + CONS_H + (S.trans.on && S.trans.aaAt ? AA_H : 0);
+function siteColor(I, c) {
+  if (!I.variable[c] && I.fixed[c]) return COL.ref;
+  return I.kind[c] === 'indel' ? COL.ink : I.kind[c] === 'snp' ? (I.het[c] ? COL.het : COL.T) : COL.muted;
+}
 
 const rowH = () => (ZOOMS[S.view.zoom] >= 8 ? 20 : 12);
 const cellW = () => ZOOMS[S.view.zoom];
@@ -1010,7 +1249,7 @@ function baseColor(code) { return COL[code] || COL.muted; }
 
 function paintAln() {
   const W = sc.clientWidth, H = sc.clientHeight;
-  const HH = headH();
+  const HH = headH(), CY = consTop();
   const lw = W < 700 ? 110 : 190; if (lw !== LABEL_W) { LABEL_W = lw; updateSpacer(); }
   const g = sizeCanvas(cv, W, H);
   g.fillStyle = '#FFFFFF'; g.fillRect(0, 0, W, H);
@@ -1053,35 +1292,52 @@ function paintAln() {
   g.fillStyle = COL.sunk; g.fillRect(LABEL_W, 0, W - LABEL_W, HH);
   if (rg) { const x0 = LABEL_W + rg[0] * cw - sx, x1 = LABEL_W + (rg[1] + 1) * cw - sx; g.fillStyle = '#D3DEF3'; g.fillRect(x0, 0, x1 - x0, RULER_H); g.fillStyle = COL.sel; g.fillRect(x0, RULER_H - 2, x1 - x0, 2); }
   g.fillStyle = COL.rule; g.fillRect(0, HH - 1, W, 1); g.fillRect(0, RULER_H - 0.5, W, 0.5);
+  if (A.ref) g.fillRect(0, CY - 0.5, W, 0.5);
   const step = cw >= 12 ? 10 : cw >= 8 ? 20 : cw >= 5 ? 50 : 100;
   g.font = `500 10px ${MONO}`; g.textBaseline = 'alphabetic';
   for (let c = c0; c < c1; c++) {
     const x = LABEL_W + c * cw - sx, p = I.pos[c];
     if (!p.includes('+') && (+p % step === 0 || +p === 1)) { g.fillStyle = COL.muted; g.textAlign = 'left'; g.fillText(p, x + 1, 11); g.fillRect(x, 12, 1, 4); }
     const a = I.annAt.get(c);
-    if (I.variable[c] || a) {
-      g.fillStyle = I.kind[c] === 'indel' ? COL.ink : I.kind[c] === 'snp' ? (I.het[c] ? COL.het : COL.T) : COL.muted;
+    if (I.variable[c] || I.fixed[c] || a) {
+      g.fillStyle = siteColor(I, c);
       g.fillRect(x, RULER_H - 5, Math.max(cw, 2), 4);
       if (a) { g.fillStyle = a.status === 'confirmed' ? COL.A : a.status === 'artifact' ? COL.muted : COL.het; g.beginPath(); g.arc(x + cw / 2, RULER_H - 10, 3, 0, 7); g.fill(); }
     }
   }
+  // pinned reference row
+  const RR = A.ref;
+  if (RR) {
+    g.font = `700 ${cw >= 12 ? 13 : 11}px ${MONO}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    for (let c = c0; c < c1; c++) {
+      const v = RR.rowAt[c]; if (v === -2) continue;
+      const x = LABEL_W + c * cw - sx;
+      if (v === -1) { g.fillStyle = COL.muted; g.fillRect(x + 1, RULER_H + REF_H / 2 - 0.5, cw - 2, 1); continue; }
+      const k = S.ref.seq[v], ck = I.cons[c];
+      const diff = ck !== ' ' && refDiffers(ck, k);
+      if (letters) {
+        if (diff) { g.fillStyle = COL.refBg; g.fillRect(x, RULER_H + 2, cw, REF_H - 4); }
+        g.fillStyle = k === 'N' ? COL.muted : isHet(k) ? COL.ink : baseColor(k); g.fillText(k, x + cw / 2, RULER_H + REF_H / 2 + 1);
+      } else { g.fillStyle = diff ? COL.ref : COL.match; g.fillRect(x, RULER_H + 4, Math.max(1, cw - 1), REF_H - 8); }
+    }
+  }
   if (letters) {
     g.font = `700 ${cw >= 12 ? 13 : 11}px ${MONO}`; g.textAlign = 'center'; g.textBaseline = 'middle';
-    for (let c = c0; c < c1; c++) { const k = I.cons[c]; if (k === ' ') continue; const x = LABEL_W + c * cw - sx; g.fillStyle = k === '-' ? COL.muted : isHet(k) ? COL.ink : baseColor(k); if (isHet(k)) { g.fillStyle = COL.hetBg; g.fillRect(x, RULER_H + 2, cw, CONS_H - 4); g.fillStyle = COL.ink; } g.fillText(k, x + cw / 2, RULER_H + CONS_H / 2 + 1); }
+    for (let c = c0; c < c1; c++) { const k = I.cons[c]; if (k === ' ') continue; const x = LABEL_W + c * cw - sx; g.fillStyle = k === '-' ? COL.muted : isHet(k) ? COL.ink : baseColor(k); if (isHet(k)) { g.fillStyle = COL.hetBg; g.fillRect(x, CY + 2, cw, CONS_H - 4); g.fillStyle = COL.ink; } g.fillText(k, x + cw / 2, CY + CONS_H / 2 + 1); }
   } else {
-    for (let c = c0; c < c1; c++) { const k = I.cons[c]; if (k === ' ') continue; const x = LABEL_W + c * cw - sx; g.fillStyle = k === '-' ? '#E8ECEA' : isHet(k) ? COL.het : COL.match; g.fillRect(x, RULER_H + 4, Math.max(1, cw - 1), CONS_H - 8); }
+    for (let c = c0; c < c1; c++) { const k = I.cons[c]; if (k === ' ') continue; const x = LABEL_W + c * cw - sx; g.fillStyle = k === '-' ? '#E8ECEA' : isHet(k) ? COL.het : COL.match; g.fillRect(x, CY + 4, Math.max(1, cw - 1), CONS_H - 8); }
   }
   // amino acid track
   const T = S.trans;
   if (T.on && T.aaAt) {
-    const y0 = RULER_H + CONS_H;
+    const y0 = CY + CONS_H;
     for (let c = c0; c < c1; c++) {
       const a = T.aaAt[c]; if (!a) continue;
       const cd = T.codons[a.ci], x = LABEL_W + c * cw - sx;
       g.fillStyle = cd.aa === '*' ? '#F7D9D7' : (a.ci % 2 ? '#E7EDE9' : '#F4F7F5');
       g.fillRect(x, y0 + 2, cw + 0.5, AA_H - 5);
       if (a.k === 0 && c > 0) { g.fillStyle = '#B9C4BE'; g.fillRect(x, y0 + 2, 1, AA_H - 5); }
-      const eff = I.variable[c] ? effectLabel(c) : null;
+      const eff = (I.variable[c] || I.fixed[c]) ? effectLabel(c) : null;
       if (eff && eff.cls) { g.fillStyle = eff.cls === 'stopaa' ? COL.T : COL.het; g.fillRect(x, y0 + AA_H - 5, cw, 2); }
     }
     if (cw >= 6) {
@@ -1099,8 +1355,13 @@ function paintAln() {
   g.fillStyle = COL.panel; g.fillRect(0, 0, LABEL_W, H);
   g.fillStyle = COL.rule; g.fillRect(LABEL_W - 1, 0, 1, H);
   g.textAlign = 'left'; g.textBaseline = 'middle';
-  g.font = `700 12px ${UIF}`; g.fillStyle = COL.ink; g.fillText('Consensus', 12, RULER_H + CONS_H / 2 + 1);
-  if (T.on && T.aaAt) { g.font = `400 11px ${UIF}`; g.fillStyle = COL.muted; g.fillText('Protein (frame ' + (S.trans.frame > 0 ? '+' : '') + S.trans.frame + ')', 12, RULER_H + CONS_H + AA_H / 2); }
+  if (RR) {
+    g.font = `700 12px ${UIF}`; g.fillStyle = COL.ref; g.fillText('Reference', 12, RULER_H + REF_H / 2 + 1);
+    const rw = g.measureText('Reference').width;
+    g.font = `400 11px ${UIF}`; g.fillStyle = COL.muted; g.fillText(fit(g, S.ref.name, LABEL_W - 24 - rw - 6), 12 + rw + 6, RULER_H + REF_H / 2 + 1);
+  }
+  g.font = `700 12px ${UIF}`; g.fillStyle = COL.ink; g.fillText('Consensus', 12, CY + CONS_H / 2 + 1);
+  if (T.on && T.aaAt) { g.font = `400 11px ${UIF}`; g.fillStyle = COL.muted; g.fillText('Protein (frame ' + (S.trans.frame > 0 ? '+' : '') + S.trans.frame + ')', 12, CY + CONS_H + AA_H / 2); }
   g.font = `400 11px ${UIF}`; g.fillStyle = COL.muted; g.fillText(rg ? 'Positions ' + I.pos[rg[0]] + '–' + I.pos[rg[1]] : S.sel >= 0 ? 'Position ' + I.pos[S.sel] : 'Position', 12, RULER_H / 2 + 1);
   g.save(); g.beginPath(); g.rect(0, HH, LABEL_W, H - HH); g.clip();
   g.font = `400 ${rh >= 20 ? 12 : 10}px ${UIF}`;
@@ -1125,7 +1386,7 @@ function paintOverview() {
   for (let x = 0; x < W; x++) { const c = Math.min(cols - 1, Math.floor(x / W * cols)); const h = (I.cov[c] / maxCov) * (H - 12); g.fillRect(x, H - h, 1, h); }
   for (const c of I.sites) {
     const x = Math.floor(c / cols * W), a = I.annAt.get(c);
-    g.fillStyle = I.kind[c] === 'indel' ? COL.ink : I.kind[c] === 'snp' ? (I.het[c] ? COL.het : COL.T) : COL.muted;
+    g.fillStyle = siteColor(I, c);
     g.fillRect(x, a ? 0 : 6, 2, a ? H : H - 6);
   }
   const cw = cellW(), vw = sc.clientWidth - LABEL_W;
@@ -1226,8 +1487,9 @@ function visibleSites() {
     if (f === 'het') return I.het[c] > 0;
     if (f === 'indel') return I.kind[c] === 'indel';
     if (f === 'ann') return I.annAt.has(c);
-    if (f === 'aa') { const e = I.variable[c] ? effectLabel(c) : null; return !!(e && e.cls); }
-    return I.variable[c] || I.annAt.has(c);
+    if (f === 'aa') { const e = (I.variable[c] || I.fixed[c]) ? effectLabel(c) : null; return !!(e && e.cls); }
+    if (f === 'fixed') return !!I.fixed[c];
+    return I.variable[c] || I.fixed[c] || I.annAt.has(c);
   });
 }
 function jumpSite(d) {
@@ -1243,19 +1505,56 @@ function jumpSite(d) {
 function buildTranslation() {
   const T = S.trans; T.aaAt = null; T.codons = null;
   const I = S.info; if (!T.on || !I || !S.aln) return;
-  const cols = S.aln.cols, rev = T.frame < 0, off = Math.abs(T.frame) - 1;
+  const cols = S.aln.cols, rev = T.frame < 0, fr = Math.abs(T.frame) - 1;
+  const R = S.aln.ref, L = S.ref ? S.ref.seq.length : 0;
+  if (R) { buildRefTranslation(R, L, cols, rev, fr); return; }
   const seq = [];
   for (let c = 0; c < cols; c++) { const k = I.cons[c]; if (k === ' ' || k === '-') continue; seq.push({ c, k: rev ? DP.COMP[k] : k }); }
   if (rev) seq.reverse();
+  // with a reference, frames count from the reference's own first base (last base for reverse frames)
+  const refPhase = (c) => { if (!R) return null; const v = R.rowAt[c]; if (v < 0) return null; return rev ? L - 1 - v : v; };
+  let off = fr;
+  if (R) { off = seq.length; for (let i = 0; i < seq.length; i++) { const p = refPhase(seq[i].c); if (p != null && (((p - fr) % 3) + 3) % 3 === 0) { off = i; break; } } }
   const aaAt = new Array(cols).fill(null), codons = [];
   for (let i = off; i + 2 < seq.length; i += 3) {
     const tri = [seq[i], seq[i + 1], seq[i + 2]];
     const bases = tri.map((x) => x.k), cs = tri.map((x) => x.c);
     const { aa, set } = DP.translateCodon(bases, T.code);
     const ci = codons.length;
-    codons.push({ ci, aa, set, bases, cols: cs });
+    let num = ci + 1;
+    if (R) { num = null; for (let q = 0; q < 3; q++) { const p = refPhase(cs[q]); if (p != null) { num = Math.floor((p - q - fr) / 3) + 1; break; } } }
+    codons.push({ ci, num, aa, set, bases, cols: cs });
     const lo = Math.min(...cs), hi = Math.max(...cs);
     for (let c = lo; c <= hi; c++) aaAt[c] = { ci, k: cs.indexOf(c) };
+  }
+  T.aaAt = aaAt; T.codons = codons;
+}
+/* With a reference, codons follow the reference's own grid: codon n is reference bases
+   3n-2..3n (counted from the frame offset), filled with the consensus calls. Bases the
+   reference lacks are reported as insertions rather than shifting every later codon. */
+function buildRefTranslation(R, L, cols, rev, fr) {
+  const T = S.trans, I = S.info;
+  let lo = Infinity, hi = -1;
+  for (let c = 0; c < cols; c++) { const v = R.rowAt[c]; if (v >= 0 && I.cons[c] !== ' ') { if (v < lo) lo = v; if (v > hi) hi = v; } }
+  const aaAt = new Array(cols).fill(null), codons = [];
+  if (hi < 0) { T.aaAt = aaAt; T.codons = codons; return; }
+  // reading-direction phase p: forward p = i, reverse p = L-1-i
+  const pLo = rev ? L - 1 - hi : lo, pHi = rev ? L - 1 - lo : hi;
+  let p0 = pLo + ((((fr - pLo) % 3) + 3) % 3);
+  for (; p0 + 2 <= pHi; p0 += 3) {
+    const cs = [], bases = []; let ok = true;
+    for (let q = 0; q < 3; q++) {
+      const i = rev ? L - 1 - (p0 + q) : p0 + q, c = R.rawToCol[i];
+      if (c < 0 || I.cons[c] === ' ') { ok = false; break; }
+      const k = I.cons[c] === '-' ? 'N' : I.cons[c];
+      cs.push(c); bases.push(rev ? DP.COMP[k] : k);
+    }
+    if (!ok) continue;
+    const { aa, set } = DP.translateCodon(bases, T.code);
+    const ci = codons.length;
+    codons.push({ ci, num: Math.floor((p0 - fr) / 3) + 1, aa, set, bases, cols: cs });
+    const a = Math.min(...cs), b = Math.max(...cs);
+    for (let c = a; c <= b; c++) aaAt[c] = { ci, k: cs.indexOf(c) };
   }
   T.aaAt = aaAt; T.codons = codons;
 }
@@ -1268,10 +1567,12 @@ function codonEffect(c) {
   if (a.k < 0) return { cd, insertion: true };
   const rev = T.frame < 0;
   const alleles = [...I.counts[c].keys()].filter((k) => k !== '-' && k !== 'N');
-  const res = alleles.map((al) => {
+  const rk = I.refCode ? I.refCode[c] : null;
+  const withRef = rk && rk !== '-' && rk !== 'N' && !alleles.includes(rk);
+  const res = (withRef ? [rk] : []).concat(alleles).map((al, i) => {
     const b = cd.bases.slice(); b[a.k] = rev ? DP.COMP[al] : al;
     const { aa, set } = DP.translateCodon(b, T.code);
-    return { allele: al, aa, set, codon: b.join('') };
+    return { allele: al, aa, set, codon: b.join(''), isRef: withRef && i === 0 };
   });
   const aas = new Set(); res.forEach((r) => (r.set.length ? r.set : [r.aa]).forEach((x) => aas.add(x)));
   const gapped = I.counts[c].has('-');
@@ -1292,6 +1593,15 @@ $('transCode').onchange = (e) => { S.trans.code = +e.target.value; markDirty(); 
 $('transHere').onclick = () => {
   if (!S.info || S.sel < 0) { toast('Select a column in the alignment first, then set the frame to start there.', true); return; }
   const I = S.info, cols = S.aln.cols, rev = S.trans.frame < 0;
+  if (S.aln.ref) {
+    const v = S.aln.ref.rowAt[S.sel];
+    if (v < 0) { toast('That column is not a reference base, so a codon cannot start there.', true); return; }
+    const p = rev ? S.ref.seq.length - 1 - v : v;
+    S.trans.frame = (rev ? -1 : 1) * ((p % 3) + 1);
+    $('transFrame').value = S.trans.frame; markDirty(); buildTranslation(); renderAll();
+    toast('Reading frame set to start at position ' + I.pos[S.sel] + '.');
+    return;
+  }
   const seq = []; for (let c = 0; c < cols; c++) { const k = I.cons[c]; if (k === ' ' || k === '-') continue; seq.push(c); }
   if (rev) seq.reverse();
   let i = seq.indexOf(S.sel);
@@ -1311,15 +1621,20 @@ function renderSites() {
   if (!S.info) { $('siteHead').textContent = 'Variant sites'; el.innerHTML = S.traces.length ? '' : '<p class="ins-empty">Variable positions appear here once traces are aligned.</p>'; return; }
   const list = visibleSites(); const I = S.info;
   $('siteHead').textContent = 'Variant sites (' + list.length + ')';
-  if (!list.length) { el.innerHTML = '<p class="ins-empty">' + (S.view.filter === 'ann' ? 'No annotated sites yet. Select a site and choose Annotate this site.' : S.view.filter === 'aa' && !S.trans.on ? 'Turn on Translate above the alignment to see which sites change the protein.' : 'No sites match this filter.') + '</p>'; return; }
+  if (!list.length) { el.innerHTML = '<p class="ins-empty">' + (S.view.filter === 'ann' ? 'No annotated sites yet. Select a site and choose Annotate this site.' : S.view.filter === 'aa' && !S.trans.on ? 'Turn on Translate above the alignment to see which sites change the protein.' : S.view.filter === 'fixed' && !S.ref ? 'Add a reference in the sidebar to see where your samples differ from it.' : S.view.filter === 'fixed' ? 'Your samples match the reference everywhere they are confidently called.' : 'No sites match this filter.') + '</p>'; return; }
   el.innerHTML = list.map((c) => {
-    const a = I.annAt.get(c), k = I.kind[c];
+    const a = I.annAt.get(c), k = I.kind[c], rk = I.refCode[c];
     return `<button class="site" data-c="${c}" ${c === S.sel ? 'aria-current="true"' : ''}>
       <span class="pos">${esc(I.pos[c])}</span>
-      <span class="calls">${esc(summarizeCounts(c))}</span>
+      <span class="calls">${rk ? `<span class="refk" title="Reference base">${rk === '-' ? '–' : esc(rk)}</span>` : ''}${esc(summarizeCounts(c))}</span>
       <span class="kind ${k || ''}">${k === 'indel' ? 'gap' : k === 'snp' ? 'SNP' : 'no variation'}</span>
-      ${I.het[c] ? `<span class="kind het">${I.het[c]} het</span>` : ''}
-      ${(() => { const e = I.variable[c] ? effectLabel(c) : null; return e ? `<span class="kind ${e.cls}">${esc(e.txt)}</span>` : ''; })()}
+      ${(() => {
+        const e = (I.variable[c] || I.fixed[c]) ? effectLabel(c) : null;
+        const tags = (I.fixed[c] ? '<span class="kind fixed">differs from ref</span>' : '')
+          + (I.het[c] ? `<span class="kind het">${I.het[c]} het</span>` : '')
+          + (e ? `<span class="kind ${e.cls}">${esc(e.txt)}</span>` : '');
+        return tags ? `<span class="tags">${tags}</span>` : '';
+      })()}
       ${a ? `<span class="aname"><span class="st-dot st-${a.status}"></span>${esc(a.name || 'Unnamed')}${a.kid ? ' (' + esc(a.kid) + ')' : ''}</span>` : ''}
     </button>`;
   }).join('');
@@ -1328,8 +1643,8 @@ $('siteList').addEventListener('click', (e) => { const b = e.target.closest('.si
 $('siteFilter').onchange = (e) => { S.view.filter = e.target.value; renderSites(); };
 
 /* ---------------- rendering: inspector ---------------- */
-const OVR_OPTS = ['A', 'C', 'G', 'T', 'R', 'Y', 'S', 'W', 'K', 'M', 'N'];
-const OVR_LABEL = { R: 'R (A/G)', Y: 'Y (C/T)', S: 'S (C/G)', W: 'W (A/T)', K: 'K (G/T)', M: 'M (A/C)', N: 'N (no call)' };
+const OVR_OPTS = ['A', 'C', 'G', 'T', 'R', 'Y', 'S', 'W', 'K', 'M', 'N', 'del'];
+const OVR_LABEL = { R: 'R (A/G)', Y: 'Y (C/T)', S: 'S (C/G)', W: 'W (A/T)', K: 'K (G/T)', M: 'M (A/C)', N: 'N (no call)', del: 'Remove this base (over-call)' };
 let insRows = [];
 
 function renderInspector() {
@@ -1344,10 +1659,15 @@ function renderInspector() {
   const consK = I.cons[c];
   const rank = (t) => { const v = t.rowAt[c]; if (v === -1) return 1; const k = effCode(t, v); return isHet(k) ? 0 : k !== consK ? 1 : 2; };
   cov.sort((x, y) => rank(x) - rank(y));
-  const chips = [...I.counts[c].entries()].sort((x, y) => y[1] - x[1]).map(([k, v]) => `<span class="chip"><b style="color:${isHet(k) || k === '-' ? COL.ink : baseColor(k)}">${esc(k === '-' ? 'gap' : k)}</b> ${v}${isHet(k) ? ' <span class="hint">' + DP.ALLELES[k] + '</span>' : ''}</span>`).join('');
+  const rk = I.refCode[c];
+  const refChip = S.aln.ref ? `<span class="chip refchip">Reference <b>${rk == null ? 'not covered' : rk === '-' ? 'gap' : esc(rk)}</b></span>` : '';
+  const chips = refChip + [...I.counts[c].entries()].sort((x, y) => y[1] - x[1]).map(([k, v]) => `<span class="chip"><b style="color:${isHet(k) || k === '-' ? COL.ink : baseColor(k)}">${esc(k === '-' ? 'gap' : k)}</b> ${v}${isHet(k) ? ' <span class="hint">' + DP.ALLELES[k] + '</span>' : ''}</span>`).join('');
   const nHet = I.het[c];
   const hetTxt = nHet ? ` ${nHet} trace${nHet === 1 ? '' : 's'} show${nHet === 1 ? 's' : ''} a double peak here.` : '';
-  const kindTxt = (I.kind[c] === 'indel' ? 'A gap is present in some traces.'
+  const kindTxt = I.fixed[c] ? (I.kind[c] === 'indel'
+      ? (rk === '-' ? 'Every confident call has a base the reference lacks (an insertion relative to the reference).' : 'Every confident call has a gap where the reference has ' + rk + ' (a deletion relative to the reference).')
+      : 'Every confident call differs from the reference, which has ' + rk + ' here.') + hetTxt
+    : (I.kind[c] === 'indel' ? 'A gap is present in some traces.'
     : I.kind[c] !== 'snp' ? 'No confident variation here.'
     : I.nAll[c] > 1 ? 'A substitution: confident calls differ between traces.'
     : 'A substitution: every covering trace carries the same double peak, so no homozygote is present to confirm it.') + hetTxt;
@@ -1369,7 +1689,7 @@ function renderInspector() {
   }
   const eff = codonEffect(c);
   if (eff) {
-    if (eff.insertion) html += `<div class="codon"><p>This column is an insertion relative to the consensus, so it sits outside the reading frame. An insertion of length not divisible by three would shift the frame downstream.</p></div>`;
+    if (eff.insertion) html += `<div class="codon"><p>${S.aln.ref ? 'This column is a base the reference lacks, so it sits outside the reference reading frame and codons keep their reference numbering. If your samples really carry it, an insertion whose length is not a multiple of three shifts the frame downstream.' : 'This column is an insertion relative to the consensus, so it sits outside the reading frame. An insertion of length not divisible by three would shift the frame downstream.'}</p></div>`;
     else {
       const cd = eff.cd, codonTxt = cd.bases.map((b, i) => i === eff.k ? `<b>${b}</b>` : b).join('');
       const lines = eff.res.map((r) => {
@@ -1377,31 +1697,33 @@ function renderInspector() {
         const same = r.set.length === 1 && r.aa === cd.aa;
         const cls = r.set.includes('*') && cd.aa !== '*' ? 'stopaa' : same ? '' : 'aa';
         const named = (r.set.length ? r.set : [r.aa]).map((x) => DP.AA3[x] || x).join(' or ');
-        return `<span class="chip ${cls}">${esc(r.allele)} → ${esc(r.codon)} = ${esc(aa)}<span class="hint"> ${esc(named)}</span></span>`;
+        return `<span class="chip ${cls}">${r.isRef ? 'Reference ' : ''}${esc(r.allele)} → ${esc(r.codon)} = ${esc(aa)}<span class="hint"> ${esc(named)}</span></span>`;
       }).join('');
       html += `<div class="codon">
-        <p><b>Codon ${cd.ci + 1}</b>, position ${eff.k + 1} of 3, reading frame ${S.trans.frame > 0 ? '+' : ''}${S.trans.frame}, ${esc((DP.TABLES[S.trans.code] || {}).name || '')} code. Consensus codon ${esc(cd.bases.join(''))} = ${esc(cd.aa)} (${esc(DP.AA3[cd.aa] || cd.aa)}).</p>
+        <p><b>Codon ${cd.num != null ? cd.num : '?'}</b>, position ${eff.k + 1} of 3, reading frame ${S.trans.frame > 0 ? '+' : ''}${S.trans.frame}, ${esc((DP.TABLES[S.trans.code] || {}).name || '')} code. Consensus codon ${esc(cd.bases.join(''))} = ${esc(cd.aa)} (${esc(DP.AA3[cd.aa] || cd.aa)}).</p>
         <div class="chips">${lines}</div>
-        <p class="hint">${eff.changes ? (eff.stop ? 'At least one allele introduces a stop codon.' : 'This site changes the amino acid.') : 'All alleles here give the same amino acid (a silent change).'}${eff.gapped ? ' A gap in some traces would also shift the frame downstream.' : ''} Codon numbering starts at the first complete codon in this frame, not at a start codon.</p>
+        <p class="hint">${eff.changes ? (eff.stop ? 'At least one allele introduces a stop codon.' : 'This site changes the amino acid.') : 'All alleles here give the same amino acid (a silent change).'}${eff.gapped ? ' A gap in some traces would also shift the frame downstream.' : ''} ${S.aln.ref ? 'Codons are numbered from the first base of the reference in this frame, so codon 1 is the start codon when the reference begins at ATG in frame +1.' : 'Codon numbering starts at the first complete codon in this frame, not at a start codon.'}</p>
       </div>`;
     }
   }
   html += '<div class="stack">';
   insRows = [];
   cov.forEach((t, k) => {
-    const v = t.rowAt[c];
+    const v = t.rowAt[c], isSeq = t.kind === 'seq';
+    const pane = isSeq ? `<div class="nochromo">Sequence from ${esc(t.fileName)}. No chromatogram.</div>` : `<canvas data-k="${k}"></canvas>`;
+    const what = isSeq ? 'sequence' : (t.orientUsed === 'R' ? 'reverse' : 'forward') + ' read';
     if (v === -1) {
-      html += `<div class="srow"><div class="smeta"><span class="nm" title="${esc(t.fileName)}">${esc(t.name)}</span><span class="sub">${t.sample !== t.name ? esc(t.sample) + ', ' : ''}${t.orientUsed === 'R' ? 'reverse' : 'forward'} read</span><div class="callrow"><span class="call">–</span><span class="sub">gap in this trace</span></div></div><canvas data-k="${k}"></canvas></div>`;
+      html += `<div class="srow"><div class="smeta"><span class="nm" title="${esc(t.fileName)}">${esc(t.name)}</span><span class="sub">${t.sample !== t.name ? esc(t.sample) + ', ' : ''}${what}</span><div class="callrow"><span class="call">–</span><span class="sub">gap in this ${isSeq ? 'sequence' : 'trace'}</span></div></div>${pane}</div>`;
     } else {
       const code = effCode(t, v), call = t.calls[v], ov = isOvr(t, v), autoC = t.orientUsed === 'R' ? DP.COMP[call.code] : call.code;
-      const opts = [`<option value="">Auto (${autoC})</option>`].concat(OVR_OPTS.map((o) => `<option value="${o}" ${ov && code === o ? 'selected' : ''}>${OVR_LABEL[o] || o}</option>`)).join('');
+      const opts = [`<option value="">Auto (${autoC})</option>`].concat(OVR_OPTS.map((o) => `<option value="${o}" ${o !== 'del' && ov && code === o ? 'selected' : ''}>${OVR_LABEL[o] || o}</option>`)).join('');
       html += `<div class="srow${isConf(t, v) ? '' : ' low'}"><div class="smeta">
         <span class="nm" title="${esc(t.fileName)}">${esc(t.name)}</span>
-        <span class="sub">${t.sample !== t.name ? esc(t.sample) + ', ' : ''}${t.orientUsed === 'R' ? 'reverse' : 'forward'} read, base ${v + 1}</span>
+        <span class="sub">${t.sample !== t.name ? esc(t.sample) + ', ' : ''}${what}, base ${v + 1}</span>
         <div class="callrow"><span class="call${isHet(code) ? ' het' : ''}${ov ? ' ovr' : ''}" style="color:${isHet(code) ? COL.ink : baseColor(code)}">${esc(code)}</span>
         <select data-ovr="${t.id}" data-raw="${v}" aria-label="Call for ${esc(t.name)}">${opts}</select></div>
-        <span class="sub">Peak ratio ${call.ratio.toFixed(2)}${call.q >= 0 ? ', Q' + call.q : ''}${ov ? ', edited' : ''}</span>
-      </div><canvas data-k="${k}"></canvas></div>`;
+        <span class="sub">${isSeq ? 'From a sequence file' : 'Peak ratio ' + call.ratio.toFixed(2) + (call.q >= 0 ? ', Q' + call.q : '')}${ov ? ', edited' : ''}</span>
+      </div>${pane}</div>`;
     }
     insRows.push(t);
   });
@@ -1464,12 +1786,14 @@ function drawChromo(cn, t, center, hi) {
   // base labels
   g.textAlign = 'center'; g.textBaseline = 'middle';
   for (let i = iL; i <= iR; i++) {
-    const x = X(raw.ploc[i]); const code = effCode(t, i);
+    const x = X(raw.ploc[i]); const code = effCode(t, i), del = isDel(t, i);
     if (i === hi) { g.fillStyle = isHet(code) ? COL.hetBg : '#E3EAF7'; g.fillRect(x - 8, plotH + 2, 16, 17); g.font = `700 13px ${MONO}`; }
     else g.font = `500 11px ${MONO}`;
-    g.fillStyle = isHet(code) ? COL.ink : baseColor(code);
-    if (i < tS || i >= tE) g.globalAlpha = 0.4;
-    g.fillText(code, x, plotH + 11); g.globalAlpha = 1;
+    g.fillStyle = del ? COL.muted : isHet(code) ? COL.ink : baseColor(code);
+    if (i < tS || i >= tE || del) g.globalAlpha = 0.45;
+    g.fillText(code, x, plotH + 11);
+    if (del) { g.fillRect(x - 5, plotH + 10, 10, 1.4); }
+    g.globalAlpha = 1;
   }
 }
 
@@ -1478,9 +1802,17 @@ $('inspector').addEventListener('change', (e) => {
   if (s.dataset.ovr) {
     const t = S.traces.find((x) => x.id === s.dataset.ovr); const raw = +s.dataset.raw; if (!t) return;
     if (!S.ovr[t.id]) S.ovr[t.id] = {};
+    const wasDel = isDel(t, raw);
     if (s.value === '') delete S.ovr[t.id][raw];
+    else if (s.value === 'del') S.ovr[t.id][raw] = 'del';
     else S.ovr[t.id][raw] = t.orientUsed === 'R' ? DP.COMP[s.value] : s.value;
-    markDirty(); analyze(); renderAll();
+    markDirty();
+    if (s.value === 'del' || wasDel) {
+      if (s.value === 'del') toast('Base ' + (raw + 1) + ' removed from ' + t.name + '. Restore it from the trace list on the left.');
+      schedule('calls', 0);
+      return;
+    }
+    analyze(); renderAll();
     const again = $('inspector').querySelector(`[data-ovr="${t.id}"][data-raw="${raw}"]`); if (again) again.focus();
   }
 });
@@ -1505,17 +1837,124 @@ $('inspector').addEventListener('click', (e) => {
   }
 });
 
+
+/* ---------------- reference ---------------- */
+function renderRef() {
+  const el = $('refBox'), R = S.ref;
+  if (!R) {
+    el.innerHTML = `<p class="hint">None. Positions are numbered along the consensus of your traces.</p><div class="refbtns"><button class="btn" data-ref="set">Add reference</button></div>`;
+    return;
+  }
+  const A = S.aln && S.aln.ref; let span = '';
+  if (A) {
+    let lo = -1, hi = -1; for (let c = 0; c < A.rowAt.length; c++) { const v = A.rowAt[c]; if (v >= 0) { if (lo < 0) lo = v; hi = v; } }
+    if (lo >= 0 && !R.showAll && (lo > 0 || hi < R.seq.length - 1)) span = `. Showing ${R.start + lo}–${R.start + hi}, the part your traces cover`;
+  }
+  el.innerHTML = `
+    <div class="refname" title="${esc(R.name)}">${esc(R.name)}</div>
+    <div class="hint">${R.seq.length.toLocaleString()} bases, positions ${R.start.toLocaleString()}–${(R.start + R.seq.length - 1).toLocaleString()}${span}.</div>
+    <label class="refstart">Genome position of its first base <input type="number" step="1" data-ref="start" value="${R.start}"></label>
+    <label class="tog"><input type="checkbox" data-ref="all" ${R.showAll ? 'checked' : ''}> Show the whole reference</label>
+    <div class="refbtns"><button class="btn" data-ref="set">Change</button><button class="xbtn" data-ref="rm">Remove</button></div>`;
+}
+$('refBox').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.ref === 'set') openRefDialog();
+  else if (b.dataset.ref === 'rm') { S.ref = null; markDirty(); renderRef(); schedule('align', 0); toast('Reference removed. Positions now follow the consensus.'); }
+});
+$('refBox').addEventListener('change', (e) => {
+  const R = S.ref; if (!R) return;
+  if (e.target.dataset.ref === 'start') {
+    const v = parseInt(e.target.value, 10); if (!Number.isFinite(v)) { e.target.value = R.start; return; }
+    R.start = v; markDirty(); analyze(); renderAll();
+  } else if (e.target.dataset.ref === 'all') { R.showAll = e.target.checked; markDirty(); schedule('align', 0); }
+});
+
+const refDlg = $('refDlg');
+let refDraft = { records: [], nameEdited: false };
+function openRefDialog() {
+  const R = S.ref;
+  $('refText').value = R ? '>' + R.name + '\n' + R.seq.replace(/(.{70})/g, '$1\n').replace(/\n$/, '') + '\n' : '';
+  $('refName').value = R ? R.name : '';
+  $('refStart').value = R ? R.start : 1;
+  $('refFileName').textContent = '';
+  refDraft = { records: [], nameEdited: !!R };
+  parseRefDraft();
+  refDlg.showModal();
+  $('refText').focus();
+}
+function currentRefRecord() {
+  const recs = refDraft.records; if (!recs.length) return null;
+  const i = recs.length > 1 ? +$('refRec').value || 0 : 0;
+  return recs[i] || null;
+}
+function parseRefDraft() {
+  const text = $('refText').value;
+  refDraft.records = text.trim() ? DP.parseSeqText(text).records : [];
+  const recs = refDraft.records, sel = $('refRec');
+  $('refRecWrap').hidden = recs.length < 2;
+  if (recs.length > 1) {
+    const keep = +sel.value || 0;
+    sel.innerHTML = recs.map((r, i) => `<option value="${i}">${esc(r.name || 'Record ' + (i + 1))} (${r.seq.length.toLocaleString()} bases)</option>`).join('');
+    sel.value = String(Math.min(keep, recs.length - 1));
+  }
+  updateRefInfo();
+}
+function updateRefInfo() {
+  const r = currentRefRecord(), info = $('refInfo');
+  let ok = false;
+  if (!r) info.textContent = 'Paste a sequence or choose a file.';
+  else {
+    const prob = recordProblem(r);
+    if (prob) info.textContent = 'This ' + (r.name ? 'record ' : 'sequence ') + prob + '.';
+    else if (r.seq.length < MIN_REF) info.textContent = 'Only ' + r.seq.length + ' bases. A reference needs at least ' + MIN_REF + '.';
+    else if (r.seq.length > MAX_REF) info.textContent = r.seq.length.toLocaleString() + ' bases, more than the ' + MAX_REF.toLocaleString() + ' this app aligns against. Paste the gene or amplicon region rather than a whole chromosome.';
+    else {
+      ok = true;
+      const ns = (r.seq.match(/N/g) || []).length;
+      info.textContent = r.seq.length.toLocaleString() + ' bases' + (r.bad ? ', ' + r.bad + ' unrecognised character' + (r.bad === 1 ? '' : 's') + ' read as N' : '') + (ns && !r.bad ? ', ' + ns + ' N' : '') + (r.seq.length > 10000 ? '. Long references take a few seconds to align.' : '.');
+    }
+    if (!refDraft.nameEdited) $('refName').value = r.name || $('refName').value || '';
+  }
+  $('refUse').disabled = !ok;
+}
+$('refText').addEventListener('input', parseRefDraft);
+$('refRec').addEventListener('change', () => { if (!refDraft.nameEdited) $('refName').value = ''; updateRefInfo(); });
+$('refName').addEventListener('input', () => { refDraft.nameEdited = true; });
+$('refFileBtn').onclick = () => $('refFile').click();
+$('refFile').onchange = async (e) => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  if (f.size > 5e6) { toast('That file is larger than 5 MB. Extract the region you need first, for example with samtools faidx or from the NCBI sequence viewer.', true); return; }
+  $('refText').value = await f.text();
+  $('refFileName').textContent = f.name;
+  if (!refDraft.nameEdited) $('refName').value = '';
+  parseRefDraft();
+  if (!$('refName').value) $('refName').value = f.name.replace(/\.[^.]+$/, '');
+};
+$('refUse').onclick = () => {
+  const r = currentRefRecord(); if (!r || recordProblem(r) || r.seq.length < MIN_REF || r.seq.length > MAX_REF) return;
+  const start = parseInt($('refStart').value, 10);
+  const name = $('refName').value.trim() || r.name || 'reference';
+  const keepAll = S.ref ? S.ref.showAll : false;
+  S.ref = makeRef(name, r.seq, Number.isFinite(start) ? start : 1, keepAll);
+  refDlg.close(); markDirty(); renderRef();
+  if (S.traces.length) schedule('align', 0); else renderAll();
+};
+$('refCancel').onclick = $('refClose').onclick = () => refDlg.close();
+refDlg.addEventListener('click', (e) => { if (e.target === refDlg) refDlg.close(); });
+
 /* ---------------- render all ---------------- */
 function renderAll() {
-  updateSpacer(); renderTraces(); renderSites(); renderInspector(); drawAln();
+  updateSpacer(); renderRef(); renderTraces(); renderSites(); renderInspector(); drawAln();
   const has = S.traces.length > 0;
   $('transOn').checked = S.trans.on; $('transBar').hidden = !S.trans.on;
   $('transFrame').value = S.trans.frame; $('transCode').value = S.trans.code;
   $('btnSave').disabled = !has; $('btnExport').disabled = !S.info; $('btnSeq').disabled = !S.info; renderRangeInfo();
   if (S.aln && S.info) {
     const nv = S.info.sites.filter((c) => S.info.variable[c]).length;
-    setStatus(`${S.aln.traces.length} of ${S.traces.length} traces aligned, ${S.aln.cols} columns, ${nv} variable site${nv === 1 ? '' : 's'}, ${S.ann.length} annotated`);
-  }
+    const nf = S.info.sites.filter((c) => S.info.fixed[c]).length;
+    setStatus(`${S.aln.traces.length} of ${S.traces.length} traces aligned${S.aln.ref ? ' to ' + S.ref.name : ''}, ${S.aln.cols} columns, ${nv} variable site${nv === 1 ? '' : 's'}${S.aln.ref ? ', ' + nf + ' differ from reference' : ''}, ${S.ann.length} annotated`);
+  } else if (S.ref && !S.traces.length) setStatus('Reference set. Add traces to align them to it.');
 }
 new ResizeObserver(() => drawAln()).observe(sc);
 let insW = 0;
@@ -1562,7 +2001,9 @@ $('btnSave').onclick = async () => {
     app: 'DoublePeak', version: 1, saved: new Date().toISOString(), name: $('projName').value,
     settings: S.settings,
     translation: { on: S.trans.on, frame: S.trans.frame, code: S.trans.code },
-    traces: S.traces.map((t) => ({ id: t.id, fileName: t.fileName, name: t.name, sample: t.sample, include: t.include, orient: t.orient, manualTrim: t.manualTrim, ab1: toB64(t.bytes) })),
+    reference: S.ref ? { name: S.ref.name, seq: S.ref.seq, start: S.ref.start, showAll: S.ref.showAll } : null,
+    traces: S.traces.map((t) => Object.assign({ id: t.id, kind: t.kind || 'ab1', fileName: t.fileName, name: t.name, sample: t.sample, include: t.include, orient: t.orient, manualTrim: t.manualTrim },
+      t.kind === 'seq' ? { seq: t.raw.bases } : { ab1: toB64(t.bytes) })),
     annotations: S.ann.map(({ id, loc, name, kid, type, status, notes }) => ({ id, loc, name, kid, type, status, notes })),
     overrides: S.ovr,
   };
@@ -1590,10 +2031,17 @@ async function openProject(file) {
     if (p.app !== 'DoublePeak') throw new Error('this file is not a DoublePeak project');
     const traces = [];
     for (const r of p.traces) {
+      if (r.kind === 'seq') {
+        const t = makeSeqTrace(r.name, r.seq, r.fileName, r.id);
+        Object.assign(t, { sample: r.sample || r.name, include: r.include !== false, orient: r.orient || 'auto', manualTrim: r.manualTrim || null });
+        traces.push(t); continue;
+      }
       const bytes = fromB64(r.ab1); const raw = DP.parseAB1(bytes.buffer);
       if (raw.qual && !raw.qual.some((q) => q > 0)) raw.qual = null;
-      traces.push({ id: r.id, fileName: r.fileName, name: r.name, sample: r.sample, include: r.include !== false, orient: r.orient || 'auto', manualTrim: r.manualTrim || null, bytes, raw });
+      traces.push({ id: r.id, kind: 'ab1', fileName: r.fileName, name: r.name, sample: r.sample, include: r.include !== false, orient: r.orient || 'auto', manualTrim: r.manualTrim || null, bytes, raw });
     }
+    const rf = p.reference;
+    S.ref = rf && rf.seq ? makeRef(rf.name, rf.seq, rf.start, rf.showAll) : null;
     S.traces = traces; S.settings = Object.assign({ ratio: 0.33, trim: 0.05, minQ: 20 }, p.settings);
     const tr = p.translation || {}; S.trans = { on: !!tr.on, frame: tr.frame || 1, code: tr.code || 2, aaAt: null, codons: null };
     S.ann = p.annotations || []; S.ovr = p.overrides || {}; S.sel = -1; S.selLoc = null; S.range = null; S.aln = null; S.info = null;
@@ -1604,7 +2052,7 @@ async function openProject(file) {
   } catch (e) { toast('Could not open the project: ' + e.message, true); }
 }
 $('projName').addEventListener('input', markDirty);
-window.addEventListener('beforeunload', (e) => { if (S.dirty && S.traces.length) { e.preventDefault(); e.returnValue = ''; } });
+window.addEventListener('beforeunload', (e) => { if (S.dirty && (S.traces.length || S.ref)) { e.preventDefault(); e.returnValue = ''; } });
 
 /* ---------------- export ---------------- */
 const exBtn = $('btnExport'), exMenu = $('exportMenu');
@@ -1634,10 +2082,11 @@ function doExport(kind) {
   const I = S.info, groups = sampleGroups(), samples = [...groups.keys()];
   const base = safeName();
   if (kind === 'annotated' || kind === 'variable') {
-    const cols = kind === 'annotated' ? I.sites.filter((c) => I.annAt.has(c)) : I.sites.filter((c) => I.variable[c] || I.annAt.has(c));
+    const cols = kind === 'annotated' ? I.sites.filter((c) => I.annAt.has(c)) : I.sites.filter((c) => I.variable[c] || I.fixed[c] || I.annAt.has(c));
     if (!cols.length) { toast(kind === 'annotated' ? 'No annotated sites to export yet.' : 'No variable sites to export.', true); return; }
     const tOn = S.trans.on && S.trans.aaAt;
-    const head = ['column', 'position', 'consensus', 'site_type', ...(tOn ? ['codon', 'codon_position', 'consensus_codon', 'consensus_aa', 'aa_alleles', 'effect'] : []), 'heterozygous_traces', 'distinct_alleles', 'name', 'known_id', 'annotation_type', 'status', 'notes', 'traces_covering', 'sample_conflicts', ...samples];
+    const hasRef = !!S.aln.ref;
+    const head = ['column', 'position', ...(hasRef ? ['reference_base'] : []), 'consensus', 'site_type', ...(hasRef ? ['variable_among_samples', 'differs_from_reference'] : []), ...(tOn ? ['codon', 'codon_position', 'consensus_codon', 'consensus_aa', 'aa_alleles', 'effect'] : []), 'heterozygous_traces', 'distinct_alleles', 'name', 'known_id', 'annotation_type', 'status', 'notes', 'traces_covering', 'sample_conflicts', ...samples];
     const rows = [head];
     for (const c of cols) {
       const a = I.annAt.get(c) || {}; let conflicts = 0;
@@ -1646,28 +2095,33 @@ function doExport(kind) {
       if (tOn) { const e = codonEffect(c);
         tc = !e ? ['', '', '', '', '', 'outside reading frame']
           : e.insertion ? ['', '', '', '', '', 'insertion relative to consensus']
-          : [e.cd.ci + 1, e.k + 1, e.cd.bases.join(''), e.cd.aa, e.aas.join('/'), e.stop ? 'stop gained' : e.changes ? 'changes amino acid' : 'silent']; }
-      rows.push([c + 1, I.pos[c], I.cons[c], I.kind[c] || '', ...tc, I.het[c], I.nAll[c], a.name || '', a.kid || '', a.type || '', a.status || '', a.notes || '', I.cov[c], conflicts, ...gts]);
+          : [e.cd.num != null ? e.cd.num : '', e.k + 1, e.cd.bases.join(''), e.cd.aa, e.aas.join('/'), e.stop ? 'stop gained' : e.changes ? 'changes amino acid' : 'silent']; }
+      const rk = I.refCode[c];
+      rows.push([c + 1, I.pos[c], ...(hasRef ? [rk == null ? '' : rk] : []), I.cons[c], I.kind[c] || '', ...(hasRef ? [I.variable[c] ? 'yes' : 'no', I.fixed[c] ? 'yes' : 'no'] : []), ...tc, I.het[c], I.nAll[c], a.name || '', a.kid || '', a.type || '', a.status || '', a.notes || '', I.cov[c], conflicts, ...gts]);
     }
     const unplaced = S.ann.filter((a) => a.col < 0);
     download(base + (kind === 'annotated' ? '_annotated_sites.csv' : '_variable_sites.csv'), csv(rows), 'text/csv');
     if (unplaced.length) toast(unplaced.length + ' annotation' + (unplaced.length > 1 ? 's are' : ' is') + ' not in the current alignment and were left out (their traces are removed or excluded).');
   } else if (kind === 'long') {
-    const cols = I.sites.filter((c) => I.variable[c] || I.annAt.has(c));
-    const rows = [['column', 'position', 'name', 'trace', 'file', 'sample', 'direction', 'call', 'auto_call', 'edited', 'confident', 'peak_ratio', 'quality', 'trace_base']];
+    const cols = I.sites.filter((c) => I.variable[c] || I.fixed[c] || I.annAt.has(c));
+    const hasRef = !!S.aln.ref;
+    const rows = [['column', 'position', ...(hasRef ? ['reference_base'] : []), 'name', 'trace', 'source', 'file', 'sample', 'direction', 'call', 'auto_call', 'edited', 'confident', 'peak_ratio', 'quality', 'trace_base']];
     for (const c of cols) {
       const a = I.annAt.get(c) || {};
       for (const t of S.aln.traces) {
         const v = t.rowAt[c]; if (v === -2) continue;
-        if (v === -1) { rows.push([c + 1, I.pos[c], a.name || '', t.name, t.fileName, t.sample, t.orientUsed === 'R' ? 'reverse' : 'forward', '-', '-', 'no', 'yes', '', '', '']); continue; }
+        const pre = [c + 1, I.pos[c], ...(hasRef ? [I.refCode[c] == null ? '' : I.refCode[c]] : []), a.name || '', t.name, t.kind === 'seq' ? 'sequence file' : 'chromatogram', t.fileName, t.sample, t.orientUsed === 'R' ? 'reverse' : 'forward'];
+        if (v === -1) { rows.push([...pre, '-', '-', 'no', 'yes', '', '', '']); continue; }
         const call = t.calls[v];
-        rows.push([c + 1, I.pos[c], a.name || '', t.name, t.fileName, t.sample, t.orientUsed === 'R' ? 'reverse' : 'forward', effCode(t, v), t.orientUsed === 'R' ? DP.COMP[call.code] : call.code, isOvr(t, v) ? 'yes' : 'no', isConf(t, v) ? 'yes' : 'no', call.ratio.toFixed(3), call.q >= 0 ? call.q : '', v + 1]);
+        rows.push([...pre, effCode(t, v), t.orientUsed === 'R' ? DP.COMP[call.code] : call.code, isOvr(t, v) ? 'yes' : 'no', isConf(t, v) ? 'yes' : 'no', t.kind === 'seq' ? '' : call.ratio.toFixed(3), call.q >= 0 ? call.q : '', v + 1]);
       }
     }
     download(base + '_calls_by_trace.csv', csv(rows), 'text/csv');
   } else if (kind === 'fasta') {
     const wrap = (s) => s.replace(/(.{80})/g, '$1\n').replace(/\n$/, '');
-    let out = '>consensus\n' + wrap(I.cons.map((k) => (k === ' ' ? '-' : k)).join('')) + '\n';
+    let out = '';
+    if (S.aln.ref) { let r = ''; for (let c = 0; c < S.aln.cols; c++) { const v = S.aln.ref.rowAt[c]; r += v >= 0 ? S.ref.seq[v] : '-'; } out += '>' + S.ref.name.replace(/\s+/g, '_') + ' reference positions=' + I.pos[0] + '-' + I.pos[S.aln.cols - 1] + '\n' + wrap(r) + '\n'; }
+    out += '>consensus\n' + wrap(I.cons.map((k) => (k === ' ' ? '-' : k)).join('')) + '\n';
     for (const t of S.aln.traces) {
       let s = ''; for (let c = 0; c < S.aln.cols; c++) { const v = t.rowAt[c]; s += v < 0 ? '-' : effCode(t, v); }
       out += '>' + t.name.replace(/\s+/g, '_') + ' sample=' + t.sample.replace(/\s+/g, '_') + ' ' + (t.orientUsed === 'R' ? 'reverse' : 'forward') + '\n' + wrap(s) + '\n';
@@ -1699,7 +2153,7 @@ function openSeqDialog() {
   $('sqFrom').max = $('sqTo').max = lastNum;
   document.querySelector(`input[name=sqRange][value=${rg ? 'sel' : 'all'}]`).checked = true;
   const chosen = S.view.seqRows;
-  const rows = [{ id: 'cons', name: 'Consensus' }].concat(S.trans.on && S.trans.aaAt ? [{ id: 'prot', name: 'Consensus protein (frame ' + (S.trans.frame > 0 ? '+' : '') + S.trans.frame + ')' }] : []).concat(S.aln.traces.map((t) => ({ id: t.id, name: t.name + (t.sample !== t.name ? ' (' + t.sample + ')' : '') })));
+  const rows = (S.aln.ref ? [{ id: 'ref', name: 'Reference (' + S.ref.name + ')' }] : []).concat([{ id: 'cons', name: 'Consensus' }]).concat(S.trans.on && S.trans.aaAt ? [{ id: 'prot', name: 'Consensus protein (frame ' + (S.trans.frame > 0 ? '+' : '') + S.trans.frame + ')' }] : []).concat(S.aln.traces.map((t) => ({ id: t.id, name: t.name + (t.sample !== t.name ? ' (' + t.sample + ')' : '') })));
   $('sqRows').innerHTML = rows.map((r) => `<label><input type="checkbox" value="${r.id}" ${!chosen || chosen.has(r.id) ? 'checked' : ''}> ${esc(r.name)}</label>`).join('');
   buildSeqText();
   dlg.showModal();
@@ -1724,7 +2178,8 @@ function buildSeqText() {
   const out = [];
   for (const id of ids) {
     let name, desc, s = '';
-    if (id === 'cons') { name = 'consensus'; desc = ''; for (let c = c0; c <= c1; c++) { const k = I.cons[c]; s += k === ' ' ? '-' : k; } }
+    if (id === 'ref') { if (!S.aln.ref) continue; name = S.ref.name.replace(/\s+/g, '_'); desc = ' reference'; for (let c = c0; c <= c1; c++) { const v = S.aln.ref.rowAt[c]; s += v >= 0 ? S.ref.seq[v] : '-'; } }
+    else if (id === 'cons') { name = 'consensus'; desc = ''; for (let c = c0; c <= c1; c++) { const k = I.cons[c]; s += k === ' ' ? '-' : k; } }
     else if (id === 'prot') {
       const T = S.trans; if (!T.aaAt) continue;
       name = 'consensus_protein'; desc = ' frame=' + (T.frame > 0 ? '+' : '') + T.frame + ' code=' + ((DP.TABLES[T.code] || {}).name || '').replace(/\s+/g, '_');
@@ -1828,6 +2283,7 @@ function figPanels() {
   const ids = FIG.rows;
   const out = [];
   for (const t of A.traces) {
+    if (t.kind === 'seq') continue;
     if (ids && !ids.has(t.id)) continue;
     const v = t.rowAt[c];
     if (v === -2) continue;
@@ -1918,6 +2374,7 @@ function figDraw(R, opts) {
     // base letters
     if (F.showBases) {
       for (let i = p.iL; i <= p.iR; i++) {
+        if (isDel(p.t, i)) continue;
         const code = effCode(p.t, i), x = X(raw.ploc[i]);
         R.text(x, plotBot + baseH * 0.85, code, i === p.hi ? f * 1.05 : f * 0.92, { anchor: 'center', weight: i === p.hi ? 700 : 400, fill: FIGC[code] || FIGC.mid });
       }
@@ -1940,8 +2397,8 @@ function figDraw(R, opts) {
 const figDlg = $('figDlg');
 function openFigDialog() {
   if (!S.aln || S.sel < 0) { toast('Select a site in the alignment first, then export the figure.', true); return; }
-  const covering = S.aln.traces.filter((t) => t.rowAt[S.sel] !== -2);
-  if (!covering.length) { toast('No traces cover this position.', true); return; }
+  const covering = S.aln.traces.filter((t) => t.kind !== 'seq' && t.rowAt[S.sel] !== -2);
+  if (!covering.length) { toast('No chromatogram traces cover this position.', true); return; }
   if (!FIG.rows || ![...FIG.rows].some((id) => covering.find((t) => t.id === id))) FIG.rows = new Set(covering.map((t) => t.id));
   const a = S.info.annAt.get(S.sel);
   if (!FIG.title) FIG.title = '';
